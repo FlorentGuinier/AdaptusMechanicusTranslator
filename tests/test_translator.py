@@ -5,7 +5,11 @@ import pytest
 from unittest.mock import MagicMock, patch
 
 import translator
-from translator import translate_stream, get_inference_device, MODEL_NAME
+from translator import (
+    translate_stream, get_inference_device,
+    MODEL_NAME, PERSONA_TECH_PRIEST, PERSONA_SKITARII,
+    SYSTEM_PROMPT_TECH_PRIEST, SYSTEM_PROMPT_SKITARII,
+)
 
 
 # ── Helpers ────────────────────────────────────────────────────────────────────
@@ -32,16 +36,46 @@ def test_model_name_is_mistral():
     assert MODEL_NAME == "mistral"
 
 
-def test_prompt_not_empty():
-    assert len(translator.SYSTEM_PROMPT) > 50
+def test_personas_defined():
+    assert PERSONA_TECH_PRIEST == "tech_priest"
+    assert PERSONA_SKITARII == "skitarii"
 
 
-def test_prompt_instructs_french():
-    assert "FRANÇAIS" in translator.SYSTEM_PROMPT
+def test_tech_priest_prompt_not_empty():
+    assert len(SYSTEM_PROMPT_TECH_PRIEST) > 50
 
 
-def test_prompt_instructs_concise():
-    assert "CONCIS" in translator.SYSTEM_PROMPT
+def test_skitarii_prompt_not_empty():
+    assert len(SYSTEM_PROMPT_SKITARII) > 50
+
+
+def test_tech_priest_prompt_instructs_french():
+    assert "FRANÇAIS" in SYSTEM_PROMPT_TECH_PRIEST
+
+
+def test_skitarii_prompt_instructs_french():
+    assert "FRANÇAIS" in SYSTEM_PROMPT_SKITARII
+
+
+def test_tech_priest_prompt_instructs_concise():
+    assert "CONCIS" in SYSTEM_PROMPT_TECH_PRIEST
+
+
+def test_skitarii_prompt_instructs_concise():
+    assert "CONCIS" in SYSTEM_PROMPT_SKITARII
+
+
+def test_prompts_are_different():
+    """Each persona must use a distinct system prompt."""
+    assert SYSTEM_PROMPT_TECH_PRIEST != SYSTEM_PROMPT_SKITARII
+
+
+def test_tech_priest_prompt_has_liturgical_style():
+    assert "Omnimessie" in SYSTEM_PROMPT_TECH_PRIEST
+
+
+def test_skitarii_prompt_has_military_style():
+    assert "militaire" in SYSTEM_PROMPT_SKITARII.lower()
 
 
 # ── translate_stream ────────────────────────────────────────────────────────────
@@ -60,12 +94,39 @@ def test_translate_stream_skips_empty_tokens():
     assert result == ["Valid", "!"]
 
 
-def test_translate_stream_uses_system_prompt():
+def test_translate_stream_unknown_persona_raises():
+    with pytest.raises(ValueError, match="Unknown persona"):
+        list(translate_stream("hello", "sorcerer"))
+
+
+def test_translate_stream_uses_tech_priest_prompt_by_default():
     with patch("translator.ollama.chat", return_value=iter([_make_chunk("x")])) as mock_chat:
         list(translate_stream("test input"))
     messages = mock_chat.call_args.kwargs["messages"]
     system = next(m for m in messages if m["role"] == "system")
-    assert system["content"] == translator.SYSTEM_PROMPT
+    assert system["content"] == SYSTEM_PROMPT_TECH_PRIEST
+
+
+def test_translate_stream_uses_skitarii_prompt():
+    with patch("translator.ollama.chat", return_value=iter([_make_chunk("x")])) as mock_chat:
+        list(translate_stream("test input", PERSONA_SKITARII))
+    messages = mock_chat.call_args.kwargs["messages"]
+    system = next(m for m in messages if m["role"] == "system")
+    assert system["content"] == SYSTEM_PROMPT_SKITARII
+
+
+def test_translate_stream_persona_prompts_differ():
+    """Verify the two personas send different system prompts to the model."""
+    captured = {}
+    def fake_chat(**kwargs):
+        captured[kwargs["messages"][0]["content"]] = True
+        return iter([_make_chunk("x")])
+
+    with patch("translator.ollama.chat", side_effect=fake_chat):
+        list(translate_stream("test", PERSONA_TECH_PRIEST))
+        list(translate_stream("test", PERSONA_SKITARII))
+
+    assert len(captured) == 2, "Both personas must produce distinct system prompts"
 
 
 def test_translate_stream_passes_user_text():

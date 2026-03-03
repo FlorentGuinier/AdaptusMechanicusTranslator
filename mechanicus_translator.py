@@ -8,7 +8,8 @@ Powered by Ollama + Mistral 7B
 try:
     import customtkinter as ctk
     import ollama
-    from translator import MODEL_NAME, translate_stream, get_inference_device
+    from translator import (MODEL_NAME, translate_stream, get_inference_device,
+                            PERSONA_TECH_PRIEST, PERSONA_SKITARII)
 except ImportError as e:
     import tkinter as tk
     import tkinter.messagebox
@@ -134,9 +135,35 @@ class MechanicusApp(ctk.CTk):
         self.input_text.insert("0.0", "Entrez votre texte ici — Enter your text here...")
         self.input_text.bind("<FocusIn>", self._clear_placeholder)
 
-        # Translate button
+        # Persona selector + Translate button (same row)
+        btn_row = ctk.CTkFrame(body, fg_color=BG_DARK)
+        btn_row.pack(fill="x", padx=14, pady=5)
+        btn_row.columnconfigure(0, weight=0)
+        btn_row.columnconfigure(1, weight=1)
+
+        self.persona_var = ctk.StringVar(value="PRÊTRE-TECHNICIEN")
+        self.persona_combo = ctk.CTkComboBox(
+            btn_row,
+            values=["PRÊTRE-TECHNICIEN", "SKITARII"],
+            variable=self.persona_var,
+            font=ctk.CTkFont(family="Courier New", size=12, weight="bold"),
+            fg_color=BG_INPUT,
+            text_color=GOLD,
+            border_color=RED_DARK,
+            button_color=RED_PRIMARY,
+            button_hover_color=RED_BRIGHT,
+            dropdown_fg_color=BG_MEDIUM,
+            dropdown_text_color=GOLD,
+            dropdown_hover_color=RED_DARK,
+            width=210,
+            height=46,
+            corner_radius=4,
+            state="readonly",
+        )
+        self.persona_combo.grid(row=0, column=0, padx=(0, 8))
+
         self.translate_btn = ctk.CTkButton(
-            body,
+            btn_row,
             text="⚙  TRANSMUTE TO BINARIC CANT  ⚙",
             command=self._start_translation,
             font=ctk.CTkFont(family="Courier New", size=13, weight="bold"),
@@ -148,7 +175,7 @@ class MechanicusApp(ctk.CTk):
             height=46,
             corner_radius=4,
         )
-        self.translate_btn.pack(pady=5)
+        self.translate_btn.grid(row=0, column=1, sticky="ew")
 
         # Output header
         out_hdr = ctk.CTkFrame(body, fg_color=BG_DARK)
@@ -359,6 +386,10 @@ class MechanicusApp(ctk.CTk):
         self._is_translating = True
         self.translate_btn.configure(state="disabled")
         self._start_anim()
+        persona = (PERSONA_SKITARII
+                   if self.persona_var.get() == "SKITARII"
+                   else PERSONA_TECH_PRIEST)
+
         self._set_status("TRANSMUTING BIOLOGICAL DATA TO BINARIC CANT...", GOLD_BRIGHT)
         self._set_output(self.output, "")
 
@@ -368,7 +399,7 @@ class MechanicusApp(ctk.CTk):
                     "TRANSMUTING LINGUA...", GOLD
                 ))
                 _inference_checked = False
-                for token in translate_stream(text):
+                for token in translate_stream(text, persona):
                     if not _inference_checked:
                         self._query_inference_device()
                         _inference_checked = True
