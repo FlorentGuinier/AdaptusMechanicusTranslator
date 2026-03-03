@@ -1,0 +1,9 @@
+[project]
+name = "mechanicus-translator"
+version = "0.1.0"
+description = "Adeptus Mechanicus style text translator powered by Ollama + Mistral 7B"
+requires-python = ">=3.10"
+dependencies = [
+    "customtkinter>=5.2.0",
+    "ollama>=0.1.8",
+]
