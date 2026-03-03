@@ -245,7 +245,6 @@ class MechanicusApp(ctk.CTk):
             border_color=BORDER_MED,
             border_width=1,
             corner_radius=4,
-            state="disabled",
             scrollbar_button_color=RED_DARK,
             scrollbar_button_hover_color=RED_PRIMARY,
             wrap="word",
@@ -288,17 +287,13 @@ class MechanicusApp(ctk.CTk):
         self.status_label.configure(text=f"◈ {text}", text_color=color)
 
     def _set_output(self, widget: ctk.CTkTextbox, text: str):
-        widget.configure(state="normal")
         widget.delete("0.0", "end")
         if text:
             widget.insert("0.0", text)
-        widget.configure(state="disabled")
 
     def _append_output(self, widget: ctk.CTkTextbox, text: str):
-        widget.configure(state="normal")
         widget.insert("end", text)
         widget.see("end")
-        widget.configure(state="disabled")
 
     def _copy_text(self, widget: ctk.CTkTextbox):
         content = widget.get("0.0", "end").strip()
