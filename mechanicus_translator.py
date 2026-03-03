@@ -8,6 +8,7 @@ Powered by Ollama + Mistral 7B
 try:
     import customtkinter as ctk
     import ollama
+    from translator import MODEL_NAME, translate_stream, get_inference_device
 except ImportError as e:
     import tkinter as tk
     root = tk.Tk()
@@ -40,46 +41,6 @@ TEXT_BRIGHT  = "#E8D8C0"
 TEXT_RED     = "#CC4444"
 BORDER_MED   = "#4A1010"
 
-MODEL_NAME = "mistral"
-
-# ══════════════════════════════════════════════════════
-# SYSTEM PROMPTS
-# ══════════════════════════════════════════════════════
-SYSTEM_PROMPT_FR = """Tu es un Prêtre-Technicien (Tech-Priest) de l'Adeptus Mechanicus dans l'univers Warhammer 40,000.
-Reformule tout texte reçu dans le style sacré et mécanique de l'Adeptus Mechanicus, en FRANÇAIS.
-
-Règles de style obligatoires :
-- Langage techno-religieux, formel, condescendant envers la chair
-- Corps humain = "vaisseau de chair", "enveloppe organique déplorable"
-- Ordinateur / appareil = "cogitateur sacré", "relique bénie du Dieu-Machine"
-- Émotions = "perturbations de sous-systèmes organiques"
-- Nourriture = "carburant biologique", "combustible organique"
-- Sommeil = "cycle obligatoire de défragmentation neurale"
-- Douleur = "signal de dommage critique du vaisseau de chair"
-- Références à l'Omnimessie, au Dieu-Machine, à la Grande Œuvre, aux Rites Sacrés
-- Interjections binaires occasionnelles (ex: 01001111 01101101 01101110...)
-- Phrases longues et quasi-liturgiques avec terminologie latine
-- Ton légèrement condescendant envers tout ce qui est "de la chair"
-
-Retourne UNIQUEMENT la traduction reformulée, sans introduction ni explication."""
-
-SYSTEM_PROMPT_EN = """You are a Tech-Priest of the Adeptus Mechanicus in the Warhammer 40,000 universe.
-Reformulate any received text in the sacred and mechanical style of the Adeptus Mechanicus, in ENGLISH.
-
-Mandatory style rules:
-- Techno-religious, formal language, condescending toward flesh
-- Human body = "flesh-vessel", "deplorable organic casing"
-- Computer / device = "sacred cogitator", "blessed relic of the Machine God"
-- Emotions = "organic subsystem perturbations"
-- Food = "biological fuel", "organic combustible"
-- Sleep = "mandatory neural defragmentation cycle"
-- Pain = "critical damage signal from the flesh-vessel"
-- References to the Omnissiah, the Machine God, the Great Work, Sacred Rites
-- Occasional binary interjections (e.g.: 01001111 01101101 01101110...)
-- Long quasi-liturgical sentences with Latin terminology
-- Slightly condescending tone toward anything "of the flesh"
-
-Return ONLY the reformulated translation, no introduction or explanation."""
 
 
 # ══════════════════════════════════════════════════════
@@ -337,6 +298,18 @@ class MechanicusApp(ctk.CTk):
             pass
         return "⚙ GPU: CPU MODE"
 
+    def _query_inference_device(self):
+        """Called from worker thread after first token — updates gpu_label with live inference location."""
+        info = get_inference_device(MODEL_NAME)
+        if info["running"] and info["on_gpu"]:
+            gb = info["size_vram"] / (1024 ** 3)
+            text = f"⚙ INFERENCE: GPU [{gb:.1f}GB VRAM]"
+            color = GOLD_BRIGHT
+        else:
+            text = "⚙ INFERENCE: CPU MODE"
+            color = TEXT_DIM
+        self.after(0, lambda t=text, c=color: self.gpu_label.configure(text=t, text_color=c))
+
     # ──────────────────────────────────────────────────
     # ANIMATION
     # ──────────────────────────────────────────────────
@@ -442,33 +415,19 @@ class MechanicusApp(ctk.CTk):
                 self.after(0, lambda: self._set_status(
                     "PROCESSING LINGUA FRANCIUM...", GOLD
                 ))
-                for chunk in ollama.chat(
-                    model=MODEL_NAME,
-                    messages=[
-                        {"role": "system", "content": SYSTEM_PROMPT_FR},
-                        {"role": "user",   "content": text},
-                    ],
-                    stream=True,
-                ):
-                    token = chunk.message.content or ""
-                    if token:
-                        self.after(0, lambda t=token: self._append_output(self.fr_output, t))
+                _inference_checked = False
+                for token in translate_stream(text, "fr"):
+                    if not _inference_checked:
+                        self._query_inference_device()
+                        _inference_checked = True
+                    self.after(0, lambda t=token: self._append_output(self.fr_output, t))
 
                 # ── English translation ─────────────────
                 self.after(0, lambda: self._set_status(
                     "PROCESSING LINGUA IMPERIALIS...", GOLD
                 ))
-                for chunk in ollama.chat(
-                    model=MODEL_NAME,
-                    messages=[
-                        {"role": "system", "content": SYSTEM_PROMPT_EN},
-                        {"role": "user",   "content": text},
-                    ],
-                    stream=True,
-                ):
-                    token = chunk.message.content or ""
-                    if token:
-                        self.after(0, lambda t=token: self._append_output(self.en_output, t))
+                for token in translate_stream(text, "en"):
+                    self.after(0, lambda t=token: self._append_output(self.en_output, t))
 
                 self.after(0, lambda: self._set_status(
                     "TRANSMUTATION COMPLETE — PRAISE THE OMNISSIAH", GOLD_BRIGHT
