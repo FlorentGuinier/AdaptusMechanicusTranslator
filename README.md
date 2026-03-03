@@ -48,10 +48,47 @@ On first launch, if Mistral 7B is not already pulled, the app will download it a
 
 ---
 
+## CLI — FAST ITERATION WITHOUT THE GUI
+
+Translate text directly from the terminal, tokens stream in real time:
+
+```bash
+uv run python cli.py "I need to sleep"
+uv run python cli.py "I need to sleep" --lang fr
+uv run python cli.py "I need to sleep" --lang en
+echo "The machine hungers" | uv run python cli.py
+```
+
+`--lang` accepts `fr`, `en`, or `both` (default).
+
+---
+
+## DEVELOPMENT — RITES OF VERIFICATION
+
+Install dev dependencies and run the test suite:
+
+```bash
+uv sync --group dev
+uv run pytest
+```
+
+Tests cover the translation module (`translator.py`) in isolation — no live Ollama connection required, all ollama calls are mocked.
+
+```bash
+uv run pytest -v    # verbose output
+uv run pytest -x    # stop on first failure
+```
+
+---
+
 ## PROJECT STRUCTURE
 
 ```
-mechanicus_translator.py   # Main application (single file)
+mechanicus_translator.py   # GUI application
+translator.py              # Core translation logic (no GUI dependency)
+cli.py                     # Command-line interface for fast iteration
+tests/
+    test_translator.py     # Unit tests (15 tests, all mocked)
 pyproject.toml             # Project metadata and dependencies
 ```
 
