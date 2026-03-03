@@ -309,6 +309,12 @@ class MechanicusApp(ctk.CTk):
             widget.insert("0.0", text)
         widget.configure(state="disabled")
 
+    def _append_output(self, widget: ctk.CTkTextbox, text: str):
+        widget.configure(state="normal")
+        widget.insert("end", text)
+        widget.see("end")
+        widget.configure(state="disabled")
+
     def _copy_text(self, widget: ctk.CTkTextbox):
         content = widget.get("0.0", "end").strip()
         if content:
@@ -436,29 +442,33 @@ class MechanicusApp(ctk.CTk):
                 self.after(0, lambda: self._set_status(
                     "PROCESSING LINGUA FRANCIUM...", GOLD
                 ))
-                fr_result = ollama.chat(
+                for chunk in ollama.chat(
                     model=MODEL_NAME,
                     messages=[
                         {"role": "system", "content": SYSTEM_PROMPT_FR},
                         {"role": "user",   "content": text},
                     ],
-                )
-                fr_text = fr_result["message"]["content"]
-                self.after(0, lambda t=fr_text: self._set_output(self.fr_output, t))
+                    stream=True,
+                ):
+                    token = chunk.message.content or ""
+                    if token:
+                        self.after(0, lambda t=token: self._append_output(self.fr_output, t))
 
                 # ── English translation ─────────────────
                 self.after(0, lambda: self._set_status(
                     "PROCESSING LINGUA IMPERIALIS...", GOLD
                 ))
-                en_result = ollama.chat(
+                for chunk in ollama.chat(
                     model=MODEL_NAME,
                     messages=[
                         {"role": "system", "content": SYSTEM_PROMPT_EN},
                         {"role": "user",   "content": text},
                     ],
-                )
-                en_text = en_result["message"]["content"]
-                self.after(0, lambda t=en_text: self._set_output(self.en_output, t))
+                    stream=True,
+                ):
+                    token = chunk.message.content or ""
+                    if token:
+                        self.after(0, lambda t=token: self._append_output(self.en_output, t))
 
                 self.after(0, lambda: self._set_status(
                     "TRANSMUTATION COMPLETE — PRAISE THE OMNISSIAH", GOLD_BRIGHT
