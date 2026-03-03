@@ -10,7 +10,9 @@ try:
     import ollama
     from translator import (MODEL_NAME, translate_stream, translate_to_english,
                             translate_to_french_stream, get_inference_device,
-                            PERSONA_TECH_PRIEST, PERSONA_SKITARII)
+                            PERSONA_TECH_PRIEST, PERSONA_SKITARII,
+                            MODE_REFORMULATE, MODE_LITANY)
+
 except ImportError as e:
     import tkinter as tk
     import tkinter.messagebox
@@ -136,13 +138,18 @@ class MechanicusApp(ctk.CTk):
         self.input_text.insert("0.0", "Enter your text here...")
         self.input_text.bind("<FocusIn>", self._clear_placeholder)
 
-        # Language + Persona selectors + Translate button (same row)
+        # Language + Persona + Mode selectors + Translate button
         btn_row = ctk.CTkFrame(body, fg_color=BG_DARK)
         btn_row.pack(fill="x", padx=14, pady=5)
         btn_row.columnconfigure(0, weight=0)
         btn_row.columnconfigure(1, weight=0)
-        btn_row.columnconfigure(2, weight=1)
+        btn_row.columnconfigure(2, weight=0)
+        btn_row.columnconfigure(3, weight=1)
 
+        _label_kwargs = dict(
+            font=ctk.CTkFont(family="Courier New", size=9, weight="bold"),
+            text_color=TEXT_DIM,
+        )
         _combo_kwargs = dict(
             font=ctk.CTkFont(family="Courier New", size=12, weight="bold"),
             fg_color=BG_INPUT,
@@ -158,14 +165,26 @@ class MechanicusApp(ctk.CTk):
             state="readonly",
         )
 
-        self.lang_var = ctk.StringVar(value="ENGLISH")
+        # Row 0 — labels
+        ctk.CTkLabel(btn_row, text="LANGUAGE", **_label_kwargs).grid(
+            row=0, column=0, sticky="w", padx=(0, 8)
+        )
+        ctk.CTkLabel(btn_row, text="PERSONA", **_label_kwargs).grid(
+            row=0, column=1, sticky="w", padx=(0, 8)
+        )
+        ctk.CTkLabel(btn_row, text="MODE", **_label_kwargs).grid(
+            row=0, column=2, sticky="w", padx=(0, 8)
+        )
+
+        # Row 1 — combos + button
+        self.lang_var = ctk.StringVar(value="FRENCH")
         ctk.CTkComboBox(
             btn_row,
             values=["ENGLISH", "FRENCH"],
             variable=self.lang_var,
             width=150,
             **_combo_kwargs,
-        ).grid(row=0, column=0, padx=(0, 8))
+        ).grid(row=1, column=0, padx=(0, 8))
 
         self.persona_var = ctk.StringVar(value="TECH-PRIEST")
         ctk.CTkComboBox(
@@ -174,7 +193,16 @@ class MechanicusApp(ctk.CTk):
             variable=self.persona_var,
             width=200,
             **_combo_kwargs,
-        ).grid(row=0, column=1, padx=(0, 8))
+        ).grid(row=1, column=1, padx=(0, 8))
+
+        self.mode_var = ctk.StringVar(value="REFORMULATE")
+        ctk.CTkComboBox(
+            btn_row,
+            values=["REFORMULATE", "LITANY"],
+            variable=self.mode_var,
+            width=180,
+            **_combo_kwargs,
+        ).grid(row=1, column=2, padx=(0, 8))
 
         self.translate_btn = ctk.CTkButton(
             btn_row,
@@ -189,27 +217,20 @@ class MechanicusApp(ctk.CTk):
             height=46,
             corner_radius=4,
         )
-        self.translate_btn.grid(row=0, column=2, sticky="ew")
+        self.translate_btn.grid(row=1, column=3, sticky="ew")
 
-        # Output columns (English + French side by side)
-        out_cols = ctk.CTkFrame(body, fg_color=BG_DARK)
-        out_cols.pack(fill="both", expand=True, padx=14, pady=(8, 4))
-        out_cols.columnconfigure(0, weight=1)
-        out_cols.columnconfigure(1, weight=1)
-        out_cols.rowconfigure(1, weight=1)
-
-        # English output
-        en_hdr = ctk.CTkFrame(out_cols, fg_color=BG_DARK)
-        en_hdr.grid(row=0, column=0, sticky="ew", padx=(0, 4), pady=(0, 3))
-        self.left_label = ctk.CTkLabel(
-            en_hdr,
+        # Output
+        out_hdr = ctk.CTkFrame(body, fg_color=BG_DARK)
+        out_hdr.pack(fill="x", padx=14, pady=(8, 3))
+        self.output_label = ctk.CTkLabel(
+            out_hdr,
             text="◈  SACRED OUTPUT — MECHANICUS LINGUA",
             font=ctk.CTkFont(family="Courier New", size=11, weight="bold"),
             text_color=GOLD
         )
-        self.left_label.pack(side="left")
+        self.output_label.pack(side="left")
         ctk.CTkButton(
-            en_hdr, text="COPY", width=54, height=22,
+            out_hdr, text="COPY", width=54, height=22,
             font=ctk.CTkFont(family="Courier New", size=9, weight="bold"),
             fg_color=RED_DARK, hover_color=RED_PRIMARY,
             text_color=GOLD, corner_radius=3,
@@ -217,7 +238,7 @@ class MechanicusApp(ctk.CTk):
         ).pack(side="right")
 
         self.output = ctk.CTkTextbox(
-            out_cols,
+            body,
             font=ctk.CTkFont(family="Courier New", size=13),
             fg_color=BG_PANEL,
             text_color=TEXT_MAIN,
@@ -229,40 +250,7 @@ class MechanicusApp(ctk.CTk):
             scrollbar_button_hover_color=RED_PRIMARY,
             wrap="word",
         )
-        self.output.grid(row=1, column=0, sticky="nsew", padx=(0, 4))
-
-        # French translation output
-        fr_hdr = ctk.CTkFrame(out_cols, fg_color=BG_DARK)
-        fr_hdr.grid(row=0, column=1, sticky="ew", padx=(4, 0), pady=(0, 3))
-        self.right_label = ctk.CTkLabel(
-            fr_hdr,
-            text="◈  TRADUCTION FRANÇAISE",
-            font=ctk.CTkFont(family="Courier New", size=11, weight="bold"),
-            text_color=GOLD
-        )
-        self.right_label.pack(side="left")
-        ctk.CTkButton(
-            fr_hdr, text="COPY", width=54, height=22,
-            font=ctk.CTkFont(family="Courier New", size=9, weight="bold"),
-            fg_color=RED_DARK, hover_color=RED_PRIMARY,
-            text_color=GOLD, corner_radius=3,
-            command=lambda: self._copy_text(self.fr_output)
-        ).pack(side="right")
-
-        self.fr_output = ctk.CTkTextbox(
-            out_cols,
-            font=ctk.CTkFont(family="Courier New", size=13),
-            fg_color=BG_PANEL,
-            text_color=TEXT_MAIN,
-            border_color=BORDER_MED,
-            border_width=1,
-            corner_radius=4,
-            state="disabled",
-            scrollbar_button_color=RED_DARK,
-            scrollbar_button_hover_color=RED_PRIMARY,
-            wrap="word",
-        )
-        self.fr_output.grid(row=1, column=1, sticky="nsew", padx=(4, 0))
+        self.output.pack(fill="both", expand=True, padx=14, pady=(0, 4))
 
         # ── STATUS BAR ────────────────────────────────
         ctk.CTkFrame(self, fg_color=RED_DARK, height=1, corner_radius=0).pack(
@@ -445,29 +433,27 @@ class MechanicusApp(ctk.CTk):
                    if self.persona_var.get() == "SKITARII"
                    else PERSONA_TECH_PRIEST)
         input_lang = self.lang_var.get().lower()  # "english" or "french"
+        mode = (MODE_LITANY
+                if self.mode_var.get() == "LITANY"
+                else MODE_REFORMULATE)
 
         self._set_status("TRANSMUTING BIOLOGICAL DATA TO BINARIC CANT...", GOLD_BRIGHT)
         self._set_output(self.output, "")
-        self._set_output(self.fr_output, "")
 
         def worker():
             try:
                 if input_lang == "french":
-                    # ── LEFT: FR → EN → Mechanicus(EN) → FR ────
-                    self.after(0, lambda: self.left_label.configure(
-                        text="◈  FR→EN→MECHANICUS→FR"
+                    # FR → EN → Mechanicus(EN) → FR
+                    self.after(0, lambda: self.output_label.configure(
+                        text="◈  SACRED OUTPUT — FR→EN→MECHANICUS→FR"
                     ))
-                    self.after(0, lambda: self.right_label.configure(
-                        text="◈  FR→MECHANICUS(FR) — DIRECT"
-                    ))
-
                     self.after(0, lambda: self._set_status("TRANSLATING INPUT TO ENGLISH...", GOLD))
                     en_input = translate_to_english(text)
 
-                    self.after(0, lambda: self._set_status("TRANSMUTING LINGUA (EN)...", GOLD))
+                    self.after(0, lambda: self._set_status("TRANSMUTING LINGUA...", GOLD))
                     en_tokens = []
                     _inference_checked = False
-                    for token in translate_stream(en_input, persona, "english"):
+                    for token in translate_stream(en_input, persona, "english", mode):
                         if not _inference_checked:
                             self._query_inference_device()
                             _inference_checked = True
@@ -477,34 +463,18 @@ class MechanicusApp(ctk.CTk):
                     for token in translate_to_french_stream("".join(en_tokens)):
                         self.after(0, lambda t=token: self._append_output(self.output, t))
 
-                    # ── RIGHT: FR → Mechanicus(FR) direct ───────
-                    self.after(0, lambda: self._set_status("TRANSMUTING LINGUA (FR) DIRECT...", GOLD))
-                    for token in translate_stream(text, persona, "french"):
-                        self.after(0, lambda t=token: self._append_output(self.fr_output, t))
-
                 else:
-                    # ── LEFT: EN → Mechanicus(EN) ────────────────
-                    self.after(0, lambda: self.left_label.configure(
+                    # EN → Mechanicus(EN) direct
+                    self.after(0, lambda: self.output_label.configure(
                         text="◈  SACRED OUTPUT — MECHANICUS LINGUA"
                     ))
-                    self.after(0, lambda: self.right_label.configure(
-                        text="◈  TRADUCTION FRANÇAISE"
-                    ))
-
                     self.after(0, lambda: self._set_status("TRANSMUTING LINGUA...", GOLD))
-                    en_tokens = []
                     _inference_checked = False
-                    for token in translate_stream(text, persona, "english"):
+                    for token in translate_stream(text, persona, "english", mode):
                         if not _inference_checked:
                             self._query_inference_device()
                             _inference_checked = True
-                        en_tokens.append(token)
                         self.after(0, lambda t=token: self._append_output(self.output, t))
-
-                    # ── RIGHT: EN Mechanicus → FR ─────────────────
-                    self.after(0, lambda: self._set_status("TRANSLATING TO FRENCH...", GOLD))
-                    for token in translate_to_french_stream("".join(en_tokens)):
-                        self.after(0, lambda t=token: self._append_output(self.fr_output, t))
 
                 self.after(0, lambda: self._set_status(
                     "TRANSMUTATION COMPLETE — PRAISE THE OMNISSIAH", GOLD_BRIGHT
