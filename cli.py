@@ -11,6 +11,10 @@ Usage:
 """
 import argparse
 import sys
+
+sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+
 from translator import translate_stream
 
 
