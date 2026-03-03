@@ -70,7 +70,7 @@ def test_tech_priest_prompt_instructs_concise():
 
 
 def test_skitarii_prompt_instructs_concise():
-    assert "CONCISE" in SYSTEM_PROMPT_SKITARII
+    assert "MAXIMUM" in SYSTEM_PROMPT_SKITARII
 
 
 def test_prompts_are_different():
