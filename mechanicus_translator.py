@@ -11,11 +11,12 @@ try:
     from translator import MODEL_NAME, translate_stream, get_inference_device
 except ImportError as e:
     import tkinter as tk
+    import tkinter.messagebox
     root = tk.Tk()
     root.withdraw()
-    tk.messagebox.showerror(
+    tkinter.messagebox.showerror(
         "MISSING DEPENDENCIES",
-        f"Install requirements first:\n\npip install -r requirements.txt\n\nMissing: {e}"
+        f"Install requirements first:\n\n    uv sync\n\nMissing: {e}"
     )
     raise SystemExit(1)
 
