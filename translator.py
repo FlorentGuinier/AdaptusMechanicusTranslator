@@ -56,13 +56,15 @@ _PROMPTS = {
 }
 
 
-def translate_stream(text: str, persona: str = PERSONA_TECH_PRIEST) -> Iterator[str]:
+def translate_stream(text: str, persona: str = PERSONA_TECH_PRIEST,
+                     input_lang: str = "english") -> Iterator[str]:
     """
     Yield translation tokens one by one in Adeptus Mechanicus style.
 
     Args:
-        text:    Input text to translate.
-        persona: Speaking persona — PERSONA_TECH_PRIEST or PERSONA_SKITARII.
+        text:       Input text to translate.
+        persona:    Speaking persona — PERSONA_TECH_PRIEST or PERSONA_SKITARII.
+        input_lang: Language of the input text, e.g. "english" or "french".
 
     Yields:
         Non-empty string tokens as they are generated.
@@ -72,11 +74,12 @@ def translate_stream(text: str, persona: str = PERSONA_TECH_PRIEST) -> Iterator[
     """
     if persona not in _PROMPTS:
         raise ValueError(f"Unknown persona: {persona!r}. Choose from {PERSONAS}.")
+    user_message = f"[Input language: {input_lang}. Respond in {input_lang}.]\n{text}"
     for chunk in ollama.chat(
         model=MODEL_NAME,
         messages=[
             {"role": "system", "content": _PROMPTS[persona]},
-            {"role": "user", "content": text},
+            {"role": "user", "content": user_message},
         ],
         stream=True,
         options={"num_predict": 300},

@@ -135,17 +135,14 @@ class MechanicusApp(ctk.CTk):
         self.input_text.insert("0.0", "Enter your text here...")
         self.input_text.bind("<FocusIn>", self._clear_placeholder)
 
-        # Persona selector + Translate button (same row)
+        # Language + Persona selectors + Translate button (same row)
         btn_row = ctk.CTkFrame(body, fg_color=BG_DARK)
         btn_row.pack(fill="x", padx=14, pady=5)
         btn_row.columnconfigure(0, weight=0)
-        btn_row.columnconfigure(1, weight=1)
+        btn_row.columnconfigure(1, weight=0)
+        btn_row.columnconfigure(2, weight=1)
 
-        self.persona_var = ctk.StringVar(value="TECH-PRIEST")
-        self.persona_combo = ctk.CTkComboBox(
-            btn_row,
-            values=["TECH-PRIEST", "SKITARII"],
-            variable=self.persona_var,
+        _combo_kwargs = dict(
             font=ctk.CTkFont(family="Courier New", size=12, weight="bold"),
             fg_color=BG_INPUT,
             text_color=GOLD,
@@ -155,12 +152,28 @@ class MechanicusApp(ctk.CTk):
             dropdown_fg_color=BG_MEDIUM,
             dropdown_text_color=GOLD,
             dropdown_hover_color=RED_DARK,
-            width=210,
             height=46,
             corner_radius=4,
             state="readonly",
         )
-        self.persona_combo.grid(row=0, column=0, padx=(0, 8))
+
+        self.lang_var = ctk.StringVar(value="ENGLISH")
+        ctk.CTkComboBox(
+            btn_row,
+            values=["ENGLISH", "FRENCH"],
+            variable=self.lang_var,
+            width=150,
+            **_combo_kwargs,
+        ).grid(row=0, column=0, padx=(0, 8))
+
+        self.persona_var = ctk.StringVar(value="TECH-PRIEST")
+        ctk.CTkComboBox(
+            btn_row,
+            values=["TECH-PRIEST", "SKITARII"],
+            variable=self.persona_var,
+            width=200,
+            **_combo_kwargs,
+        ).grid(row=0, column=1, padx=(0, 8))
 
         self.translate_btn = ctk.CTkButton(
             btn_row,
@@ -175,7 +188,7 @@ class MechanicusApp(ctk.CTk):
             height=46,
             corner_radius=4,
         )
-        self.translate_btn.grid(row=0, column=1, sticky="ew")
+        self.translate_btn.grid(row=0, column=2, sticky="ew")
 
         # Output columns (English + French side by side)
         out_cols = ctk.CTkFrame(body, fg_color=BG_DARK)
@@ -428,7 +441,7 @@ class MechanicusApp(ctk.CTk):
         persona = (PERSONA_SKITARII
                    if self.persona_var.get() == "SKITARII"
                    else PERSONA_TECH_PRIEST)
-
+        input_lang = self.lang_var.get().lower()  # "english" or "french"
 
         self._set_status("TRANSMUTING BIOLOGICAL DATA TO BINARIC CANT...", GOLD_BRIGHT)
         self._set_output(self.output, "")
@@ -436,21 +449,21 @@ class MechanicusApp(ctk.CTk):
 
         def worker():
             try:
-                # ── English Mechanicus output ───────────
+                # ── Mechanicus output (same language as input) ──
                 self.after(0, lambda: self._set_status("TRANSMUTING LINGUA...", GOLD))
-                english_tokens = []
+                primary_tokens = []
                 _inference_checked = False
-                for token in translate_stream(text, persona):
+                for token in translate_stream(text, persona, input_lang):
                     if not _inference_checked:
                         self._query_inference_device()
                         _inference_checked = True
-                    english_tokens.append(token)
+                    primary_tokens.append(token)
                     self.after(0, lambda t=token: self._append_output(self.output, t))
 
-                # ── French translation of English output ─
+                # ── French translation of primary output ────────
                 self.after(0, lambda: self._set_status("TRANSLATING TO FRENCH...", GOLD))
-                english_text = "".join(english_tokens)
-                for token in translate_to_french_stream(english_text):
+                primary_text = "".join(primary_tokens)
+                for token in translate_to_french_stream(primary_text):
                     self.after(0, lambda t=token: self._append_output(self.fr_output, t))
 
                 self.after(0, lambda: self._set_status(

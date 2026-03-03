@@ -134,7 +134,15 @@ def test_translate_stream_passes_user_text():
         list(translate_stream("my flesh words"))
     messages = mock_chat.call_args.kwargs["messages"]
     user = next(m for m in messages if m["role"] == "user")
-    assert user["content"] == "my flesh words"
+    assert "my flesh words" in user["content"]
+
+
+def test_translate_stream_includes_input_lang_hint():
+    with patch("translator.ollama.chat", return_value=iter([_make_chunk("x")])) as mock_chat:
+        list(translate_stream("test", input_lang="french"))
+    messages = mock_chat.call_args.kwargs["messages"]
+    user = next(m for m in messages if m["role"] == "user")
+    assert "french" in user["content"].lower()
 
 
 def test_translate_stream_uses_correct_model():
