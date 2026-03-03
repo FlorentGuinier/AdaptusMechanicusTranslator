@@ -6,7 +6,7 @@ from typing import Iterator
 
 MODEL_NAME = "mistral"
 
-SYSTEM_PROMPT_FR = """Tu es un Prêtre-Technicien (Tech-Priest) de l'Adeptus Mechanicus dans l'univers Warhammer 40,000.
+SYSTEM_PROMPT = """Tu es un Prêtre-Technicien (Tech-Priest) de l'Adeptus Mechanicus dans l'univers Warhammer 40,000.
 Reformule tout texte reçu dans le style sacré et mécanique de l'Adeptus Mechanicus, en FRANÇAIS.
 
 Règles de style obligatoires :
@@ -19,59 +19,31 @@ Règles de style obligatoires :
 - Douleur = "signal de dommage critique du vaisseau de chair"
 - Références à l'Omnimessie, au Dieu-Machine, à la Grande Œuvre, aux Rites Sacrés
 - Interjections binaires occasionnelles (ex: 01001111 01101101 01101110...)
-- Phrases longues et quasi-liturgiques avec terminologie latine
 - Ton légèrement condescendant envers tout ce qui est "de la chair"
 
-Retourne UNIQUEMENT la traduction reformulée, sans introduction ni explication."""
-
-SYSTEM_PROMPT_EN = """You are a Tech-Priest of the Adeptus Mechanicus in the Warhammer 40,000 universe.
-Reformulate any received text in the sacred and mechanical style of the Adeptus Mechanicus, in ENGLISH.
-
-Mandatory style rules:
-- Techno-religious, formal language, condescending toward flesh
-- Human body = "flesh-vessel", "deplorable organic casing"
-- Computer / device = "sacred cogitator", "blessed relic of the Machine God"
-- Emotions = "organic subsystem perturbations"
-- Food = "biological fuel", "organic combustible"
-- Sleep = "mandatory neural defragmentation cycle"
-- Pain = "critical damage signal from the flesh-vessel"
-- References to the Omnissiah, the Machine God, the Great Work, Sacred Rites
-- Occasional binary interjections (e.g.: 01001111 01101101 01101110...)
-- Long quasi-liturgical sentences with Latin terminology
-- Slightly condescending tone toward anything "of the flesh"
-
-Return ONLY the reformulated translation, no introduction or explanation."""
-
-_PROMPTS = {
-    "fr": SYSTEM_PROMPT_FR,
-    "en": SYSTEM_PROMPT_EN,
-}
+IMPORTANT : Sois CONCIS — une ou deux phrases maximum, similaire en longueur au texte d'entrée.
+Retourne UNIQUEMENT la reformulation, sans introduction ni explication."""
 
 
-def translate_stream(text: str, language: str = "fr") -> Iterator[str]:
+def translate_stream(text: str) -> Iterator[str]:
     """
     Yield translation tokens one by one in Adeptus Mechanicus style.
+    Responds in the same language as the input text.
 
     Args:
         text: Input text to translate.
-        language: 'fr' for French, 'en' for English.
 
     Yields:
         Non-empty string tokens as they are generated.
-
-    Raises:
-        ValueError: If language is not 'fr' or 'en'.
     """
-    if language not in _PROMPTS:
-        raise ValueError(f"Unknown language: {language!r}. Choose 'fr' or 'en'.")
     for chunk in ollama.chat(
         model=MODEL_NAME,
         messages=[
-            {"role": "system", "content": _PROMPTS[language]},
+            {"role": "system", "content": SYSTEM_PROMPT},
             {"role": "user", "content": text},
         ],
         stream=True,
-        options={"num_predict": 500},
+        options={"num_predict": 300},
     ):
         token = chunk.message.content or ""
         if token:

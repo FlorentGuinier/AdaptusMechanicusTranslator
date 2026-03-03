@@ -150,41 +150,26 @@ class MechanicusApp(ctk.CTk):
         )
         self.translate_btn.pack(pady=5)
 
-        # Output label
+        # Output header
+        out_hdr = ctk.CTkFrame(body, fg_color=BG_DARK)
+        out_hdr.pack(fill="x", padx=14, pady=(8, 3))
         ctk.CTkLabel(
-            body,
+            out_hdr,
             text="◈  SACRED OUTPUT — MECHANICUS LINGUA",
             font=ctk.CTkFont(family="Courier New", size=11, weight="bold"),
             text_color=GOLD
-        ).pack(anchor="w", padx=14, pady=(8, 3))
-
-        # Output columns
-        cols = ctk.CTkFrame(body, fg_color=BG_DARK)
-        cols.pack(fill="both", expand=True, padx=14, pady=(0, 4))
-        cols.columnconfigure(0, weight=1)
-        cols.columnconfigure(1, weight=1)
-        cols.rowconfigure(1, weight=1)
-
-        # French output
-        fr_hdr = ctk.CTkFrame(cols, fg_color=BG_DARK)
-        fr_hdr.grid(row=0, column=0, sticky="ew", padx=(0, 4), pady=(0, 3))
-        ctk.CTkLabel(
-            fr_hdr,
-            text="LINGUA FRANCIUM — VERSION FRANÇAISE",
-            font=ctk.CTkFont(family="Courier New", size=10, weight="bold"),
-            text_color=TEXT_RED
         ).pack(side="left")
         ctk.CTkButton(
-            fr_hdr, text="COPY", width=54, height=22,
+            out_hdr, text="COPY", width=54, height=22,
             font=ctk.CTkFont(family="Courier New", size=9, weight="bold"),
             fg_color=RED_DARK, hover_color=RED_PRIMARY,
             text_color=GOLD, corner_radius=3,
-            command=lambda: self._copy_text(self.fr_output)
+            command=lambda: self._copy_text(self.output)
         ).pack(side="right")
 
-        self.fr_output = ctk.CTkTextbox(
-            cols,
-            font=ctk.CTkFont(family="Courier New", size=12),
+        self.output = ctk.CTkTextbox(
+            body,
+            font=ctk.CTkFont(family="Courier New", size=13),
             fg_color=BG_PANEL,
             text_color=TEXT_MAIN,
             border_color=BORDER_MED,
@@ -195,39 +180,7 @@ class MechanicusApp(ctk.CTk):
             scrollbar_button_hover_color=RED_PRIMARY,
             wrap="word",
         )
-        self.fr_output.grid(row=1, column=0, sticky="nsew", padx=(0, 4))
-
-        # English output
-        en_hdr = ctk.CTkFrame(cols, fg_color=BG_DARK)
-        en_hdr.grid(row=0, column=1, sticky="ew", padx=(4, 0), pady=(0, 3))
-        ctk.CTkLabel(
-            en_hdr,
-            text="LINGUA IMPERIALIS — ENGLISH VERSION",
-            font=ctk.CTkFont(family="Courier New", size=10, weight="bold"),
-            text_color=TEXT_RED
-        ).pack(side="left")
-        ctk.CTkButton(
-            en_hdr, text="COPY", width=54, height=22,
-            font=ctk.CTkFont(family="Courier New", size=9, weight="bold"),
-            fg_color=RED_DARK, hover_color=RED_PRIMARY,
-            text_color=GOLD, corner_radius=3,
-            command=lambda: self._copy_text(self.en_output)
-        ).pack(side="right")
-
-        self.en_output = ctk.CTkTextbox(
-            cols,
-            font=ctk.CTkFont(family="Courier New", size=12),
-            fg_color=BG_PANEL,
-            text_color=TEXT_MAIN,
-            border_color=BORDER_MED,
-            border_width=1,
-            corner_radius=4,
-            state="disabled",
-            scrollbar_button_color=RED_DARK,
-            scrollbar_button_hover_color=RED_PRIMARY,
-            wrap="word",
-        )
-        self.en_output.grid(row=1, column=1, sticky="nsew", padx=(4, 0))
+        self.output.pack(fill="both", expand=True, padx=14, pady=(0, 4))
 
         # ── STATUS BAR ────────────────────────────────
         ctk.CTkFrame(self, fg_color=RED_DARK, height=1, corner_radius=0).pack(
@@ -407,28 +360,19 @@ class MechanicusApp(ctk.CTk):
         self.translate_btn.configure(state="disabled")
         self._start_anim()
         self._set_status("TRANSMUTING BIOLOGICAL DATA TO BINARIC CANT...", GOLD_BRIGHT)
-        self._set_output(self.fr_output, "")
-        self._set_output(self.en_output, "")
+        self._set_output(self.output, "")
 
         def worker():
             try:
-                # ── French translation ──────────────────
                 self.after(0, lambda: self._set_status(
-                    "PROCESSING LINGUA FRANCIUM...", GOLD
+                    "TRANSMUTING LINGUA...", GOLD
                 ))
                 _inference_checked = False
-                for token in translate_stream(text, "fr"):
+                for token in translate_stream(text):
                     if not _inference_checked:
                         self._query_inference_device()
                         _inference_checked = True
-                    self.after(0, lambda t=token: self._append_output(self.fr_output, t))
-
-                # ── English translation ─────────────────
-                self.after(0, lambda: self._set_status(
-                    "PROCESSING LINGUA IMPERIALIS...", GOLD
-                ))
-                for token in translate_stream(text, "en"):
-                    self.after(0, lambda t=token: self._append_output(self.en_output, t))
+                    self.after(0, lambda t=token: self._append_output(self.output, t))
 
                 self.after(0, lambda: self._set_status(
                     "TRANSMUTATION COMPLETE — PRAISE THE OMNISSIAH", GOLD_BRIGHT

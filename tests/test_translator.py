@@ -32,14 +32,16 @@ def test_model_name_is_mistral():
     assert MODEL_NAME == "mistral"
 
 
-def test_prompts_not_empty():
-    assert len(translator.SYSTEM_PROMPT_FR) > 50
-    assert len(translator.SYSTEM_PROMPT_EN) > 50
+def test_prompt_not_empty():
+    assert len(translator.SYSTEM_PROMPT) > 50
 
 
-def test_prompts_target_correct_language():
-    assert "FRANÇAIS" in translator.SYSTEM_PROMPT_FR
-    assert "ENGLISH" in translator.SYSTEM_PROMPT_EN
+def test_prompt_instructs_french():
+    assert "FRANÇAIS" in translator.SYSTEM_PROMPT
+
+
+def test_prompt_instructs_concise():
+    assert "CONCIS" in translator.SYSTEM_PROMPT
 
 
 # ── translate_stream ────────────────────────────────────────────────────────────
@@ -47,41 +49,28 @@ def test_prompts_target_correct_language():
 def test_translate_stream_yields_tokens():
     chunks = [_make_chunk("Praise "), _make_chunk("the "), _make_chunk("Omnissiah")]
     with patch("translator.ollama.chat", return_value=iter(chunks)):
-        result = list(translate_stream("hello", "fr"))
+        result = list(translate_stream("hello"))
     assert result == ["Praise ", "the ", "Omnissiah"]
 
 
 def test_translate_stream_skips_empty_tokens():
     chunks = [_make_chunk(""), _make_chunk("Valid"), _make_chunk(None), _make_chunk("!")]
     with patch("translator.ollama.chat", return_value=iter(chunks)):
-        result = list(translate_stream("hello", "en"))
+        result = list(translate_stream("hello"))
     assert result == ["Valid", "!"]
 
 
-def test_translate_stream_unknown_language_raises():
-    with pytest.raises(ValueError, match="Unknown language"):
-        list(translate_stream("hello", "de"))
-
-
-def test_translate_stream_uses_correct_system_prompt_fr():
+def test_translate_stream_uses_system_prompt():
     with patch("translator.ollama.chat", return_value=iter([_make_chunk("x")])) as mock_chat:
-        list(translate_stream("test input", "fr"))
+        list(translate_stream("test input"))
     messages = mock_chat.call_args.kwargs["messages"]
     system = next(m for m in messages if m["role"] == "system")
-    assert system["content"] == translator.SYSTEM_PROMPT_FR
-
-
-def test_translate_stream_uses_correct_system_prompt_en():
-    with patch("translator.ollama.chat", return_value=iter([_make_chunk("x")])) as mock_chat:
-        list(translate_stream("test input", "en"))
-    messages = mock_chat.call_args.kwargs["messages"]
-    system = next(m for m in messages if m["role"] == "system")
-    assert system["content"] == translator.SYSTEM_PROMPT_EN
+    assert system["content"] == translator.SYSTEM_PROMPT
 
 
 def test_translate_stream_passes_user_text():
     with patch("translator.ollama.chat", return_value=iter([_make_chunk("x")])) as mock_chat:
-        list(translate_stream("my flesh words", "fr"))
+        list(translate_stream("my flesh words"))
     messages = mock_chat.call_args.kwargs["messages"]
     user = next(m for m in messages if m["role"] == "user")
     assert user["content"] == "my flesh words"
@@ -89,14 +78,14 @@ def test_translate_stream_passes_user_text():
 
 def test_translate_stream_uses_correct_model():
     with patch("translator.ollama.chat", return_value=iter([_make_chunk("x")])) as mock_chat:
-        list(translate_stream("test", "en"))
+        list(translate_stream("test"))
     assert mock_chat.call_args.kwargs["model"] == MODEL_NAME
 
 
 def test_translate_stream_sets_num_predict():
     with patch("translator.ollama.chat", return_value=iter([_make_chunk("x")])) as mock_chat:
-        list(translate_stream("test", "en"))
-    assert mock_chat.call_args.kwargs["options"]["num_predict"] == 500
+        list(translate_stream("test"))
+    assert mock_chat.call_args.kwargs["options"]["num_predict"] == 300
 
 
 # ── get_inference_device ────────────────────────────────────────────────────────
