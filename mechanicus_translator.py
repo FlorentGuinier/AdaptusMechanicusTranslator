@@ -8,8 +8,9 @@ Powered by Ollama + Mistral 7B
 try:
     import customtkinter as ctk
     import ollama
-    from translator import (MODEL_NAME, translate_stream, translate_to_french_stream,
-                            get_inference_device, PERSONA_TECH_PRIEST, PERSONA_SKITARII)
+    from translator import (MODEL_NAME, translate_stream, translate_to_english,
+                            translate_to_french_stream, get_inference_device,
+                            PERSONA_TECH_PRIEST, PERSONA_SKITARII)
 except ImportError as e:
     import tkinter as tk
     import tkinter.messagebox
@@ -200,12 +201,13 @@ class MechanicusApp(ctk.CTk):
         # English output
         en_hdr = ctk.CTkFrame(out_cols, fg_color=BG_DARK)
         en_hdr.grid(row=0, column=0, sticky="ew", padx=(0, 4), pady=(0, 3))
-        ctk.CTkLabel(
+        self.left_label = ctk.CTkLabel(
             en_hdr,
             text="◈  SACRED OUTPUT — MECHANICUS LINGUA",
             font=ctk.CTkFont(family="Courier New", size=11, weight="bold"),
             text_color=GOLD
-        ).pack(side="left")
+        )
+        self.left_label.pack(side="left")
         ctk.CTkButton(
             en_hdr, text="COPY", width=54, height=22,
             font=ctk.CTkFont(family="Courier New", size=9, weight="bold"),
@@ -232,12 +234,13 @@ class MechanicusApp(ctk.CTk):
         # French translation output
         fr_hdr = ctk.CTkFrame(out_cols, fg_color=BG_DARK)
         fr_hdr.grid(row=0, column=1, sticky="ew", padx=(4, 0), pady=(0, 3))
-        ctk.CTkLabel(
+        self.right_label = ctk.CTkLabel(
             fr_hdr,
             text="◈  TRADUCTION FRANÇAISE",
             font=ctk.CTkFont(family="Courier New", size=11, weight="bold"),
             text_color=GOLD
-        ).pack(side="left")
+        )
+        self.right_label.pack(side="left")
         ctk.CTkButton(
             fr_hdr, text="COPY", width=54, height=22,
             font=ctk.CTkFont(family="Courier New", size=9, weight="bold"),
@@ -449,22 +452,59 @@ class MechanicusApp(ctk.CTk):
 
         def worker():
             try:
-                # ── Mechanicus output (same language as input) ──
-                self.after(0, lambda: self._set_status("TRANSMUTING LINGUA...", GOLD))
-                primary_tokens = []
-                _inference_checked = False
-                for token in translate_stream(text, persona, input_lang):
-                    if not _inference_checked:
-                        self._query_inference_device()
-                        _inference_checked = True
-                    primary_tokens.append(token)
-                    self.after(0, lambda t=token: self._append_output(self.output, t))
+                if input_lang == "french":
+                    # ── LEFT: FR → EN → Mechanicus(EN) → FR ────
+                    self.after(0, lambda: self.left_label.configure(
+                        text="◈  FR→EN→MECHANICUS→FR"
+                    ))
+                    self.after(0, lambda: self.right_label.configure(
+                        text="◈  FR→MECHANICUS(FR) — DIRECT"
+                    ))
 
-                # ── French translation of primary output ────────
-                self.after(0, lambda: self._set_status("TRANSLATING TO FRENCH...", GOLD))
-                primary_text = "".join(primary_tokens)
-                for token in translate_to_french_stream(primary_text):
-                    self.after(0, lambda t=token: self._append_output(self.fr_output, t))
+                    self.after(0, lambda: self._set_status("TRANSLATING INPUT TO ENGLISH...", GOLD))
+                    en_input = translate_to_english(text)
+
+                    self.after(0, lambda: self._set_status("TRANSMUTING LINGUA (EN)...", GOLD))
+                    en_tokens = []
+                    _inference_checked = False
+                    for token in translate_stream(en_input, persona, "english"):
+                        if not _inference_checked:
+                            self._query_inference_device()
+                            _inference_checked = True
+                        en_tokens.append(token)
+
+                    self.after(0, lambda: self._set_status("TRANSLATING BACK TO FRENCH...", GOLD))
+                    for token in translate_to_french_stream("".join(en_tokens)):
+                        self.after(0, lambda t=token: self._append_output(self.output, t))
+
+                    # ── RIGHT: FR → Mechanicus(FR) direct ───────
+                    self.after(0, lambda: self._set_status("TRANSMUTING LINGUA (FR) DIRECT...", GOLD))
+                    for token in translate_stream(text, persona, "french"):
+                        self.after(0, lambda t=token: self._append_output(self.fr_output, t))
+
+                else:
+                    # ── LEFT: EN → Mechanicus(EN) ────────────────
+                    self.after(0, lambda: self.left_label.configure(
+                        text="◈  SACRED OUTPUT — MECHANICUS LINGUA"
+                    ))
+                    self.after(0, lambda: self.right_label.configure(
+                        text="◈  TRADUCTION FRANÇAISE"
+                    ))
+
+                    self.after(0, lambda: self._set_status("TRANSMUTING LINGUA...", GOLD))
+                    en_tokens = []
+                    _inference_checked = False
+                    for token in translate_stream(text, persona, "english"):
+                        if not _inference_checked:
+                            self._query_inference_device()
+                            _inference_checked = True
+                        en_tokens.append(token)
+                        self.after(0, lambda t=token: self._append_output(self.output, t))
+
+                    # ── RIGHT: EN Mechanicus → FR ─────────────────
+                    self.after(0, lambda: self._set_status("TRANSLATING TO FRENCH...", GOLD))
+                    for token in translate_to_french_stream("".join(en_tokens)):
+                        self.after(0, lambda t=token: self._append_output(self.fr_output, t))
 
                 self.after(0, lambda: self._set_status(
                     "TRANSMUTATION COMPLETE — PRAISE THE OMNISSIAH", GOLD_BRIGHT

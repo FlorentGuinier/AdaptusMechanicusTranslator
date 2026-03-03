@@ -6,9 +6,10 @@ from unittest.mock import MagicMock, patch
 
 import translator
 from translator import (
-    translate_stream, translate_to_french_stream, get_inference_device,
-    MODEL_NAME, PERSONA_TECH_PRIEST, PERSONA_SKITARII,
-    SYSTEM_PROMPT_TECH_PRIEST, SYSTEM_PROMPT_SKITARII, SYSTEM_PROMPT_FR_TRANSLATION,
+    translate_stream, translate_to_english, translate_to_french_stream,
+    get_inference_device, MODEL_NAME, PERSONA_TECH_PRIEST, PERSONA_SKITARII,
+    SYSTEM_PROMPT_TECH_PRIEST, SYSTEM_PROMPT_SKITARII,
+    SYSTEM_PROMPT_FR_TRANSLATION, SYSTEM_PROMPT_EN_TRANSLATION,
 )
 
 
@@ -155,6 +156,44 @@ def test_translate_stream_sets_num_predict():
     with patch("translator.ollama.chat", return_value=iter([_make_chunk("x")])) as mock_chat:
         list(translate_stream("test"))
     assert mock_chat.call_args.kwargs["options"]["num_predict"] == 300
+
+
+# ── translate_to_english ───────────────────────────────────────────────────────
+
+def test_translate_to_english_returns_string():
+    mock_result = MagicMock()
+    mock_result.message.content = "The flesh-vessel hungers"
+    with patch("translator.ollama.chat", return_value=mock_result):
+        result = translate_to_english("Le vaisseau de chair a faim")
+    assert result == "The flesh-vessel hungers"
+
+
+def test_translate_to_english_uses_en_translation_prompt():
+    mock_result = MagicMock()
+    mock_result.message.content = "ok"
+    with patch("translator.ollama.chat", return_value=mock_result) as mock_chat:
+        translate_to_english("Bonjour")
+    messages = mock_chat.call_args.kwargs["messages"]
+    system = next(m for m in messages if m["role"] == "system")
+    assert system["content"] == SYSTEM_PROMPT_EN_TRANSLATION
+
+
+def test_translate_to_english_passes_text():
+    mock_result = MagicMock()
+    mock_result.message.content = "hello"
+    with patch("translator.ollama.chat", return_value=mock_result) as mock_chat:
+        translate_to_english("bonjour")
+    messages = mock_chat.call_args.kwargs["messages"]
+    user = next(m for m in messages if m["role"] == "user")
+    assert user["content"] == "bonjour"
+
+
+def test_translate_to_english_falls_back_on_empty_response():
+    mock_result = MagicMock()
+    mock_result.message.content = ""
+    with patch("translator.ollama.chat", return_value=mock_result):
+        result = translate_to_english("bonjour")
+    assert result == "bonjour"  # returns original text as fallback
 
 
 # ── translate_to_french_stream ─────────────────────────────────────────────────

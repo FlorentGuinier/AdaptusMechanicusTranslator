@@ -93,6 +93,30 @@ SYSTEM_PROMPT_FR_TRANSLATION = """You are a translator. The user will provide a 
 
 Return ONLY the French translation, no introduction or explanation."""
 
+SYSTEM_PROMPT_EN_TRANSLATION = """You are a translator. Translate the following text into English.
+Return ONLY the translation, no introduction or explanation."""
+
+
+def translate_to_english(text: str) -> str:
+    """
+    Translate text to English (blocking — used as a preprocessing step).
+
+    Args:
+        text: Text to translate.
+
+    Returns:
+        English translation as a plain string.
+    """
+    result = ollama.chat(
+        model=MODEL_NAME,
+        messages=[
+            {"role": "system", "content": SYSTEM_PROMPT_EN_TRANSLATION},
+            {"role": "user", "content": text},
+        ],
+        options={"num_predict": 300},
+    )
+    return (result.message.content or text).strip()
+
 
 def translate_to_french_stream(english_text: str) -> Iterator[str]:
     """
