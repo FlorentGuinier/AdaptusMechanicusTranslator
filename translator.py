@@ -71,6 +71,7 @@ def translate_stream(text: str, language: str = "fr") -> Iterator[str]:
             {"role": "user", "content": text},
         ],
         stream=True,
+        options={"num_predict": 500},
     ):
         token = chunk.message.content or ""
         if token:

@@ -93,6 +93,12 @@ def test_translate_stream_uses_correct_model():
     assert mock_chat.call_args.kwargs["model"] == MODEL_NAME
 
 
+def test_translate_stream_sets_num_predict():
+    with patch("translator.ollama.chat", return_value=iter([_make_chunk("x")])) as mock_chat:
+        list(translate_stream("test", "en"))
+    assert mock_chat.call_args.kwargs["options"]["num_predict"] == 500
+
+
 # ── get_inference_device ────────────────────────────────────────────────────────
 
 def test_get_inference_device_gpu():
