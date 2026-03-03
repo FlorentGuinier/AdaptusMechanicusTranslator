@@ -6,9 +6,9 @@ from unittest.mock import MagicMock, patch
 
 import translator
 from translator import (
-    translate_stream, get_inference_device,
+    translate_stream, translate_to_french_stream, get_inference_device,
     MODEL_NAME, PERSONA_TECH_PRIEST, PERSONA_SKITARII,
-    SYSTEM_PROMPT_TECH_PRIEST, SYSTEM_PROMPT_SKITARII,
+    SYSTEM_PROMPT_TECH_PRIEST, SYSTEM_PROMPT_SKITARII, SYSTEM_PROMPT_FR_TRANSLATION,
 )
 
 
@@ -49,20 +49,20 @@ def test_skitarii_prompt_not_empty():
     assert len(SYSTEM_PROMPT_SKITARII) > 50
 
 
-def test_tech_priest_prompt_instructs_french():
-    assert "FRANÇAIS" in SYSTEM_PROMPT_TECH_PRIEST
+def test_tech_priest_prompt_instructs_english():
+    assert "ENGLISH" in SYSTEM_PROMPT_TECH_PRIEST
 
 
-def test_skitarii_prompt_instructs_french():
-    assert "FRANÇAIS" in SYSTEM_PROMPT_SKITARII
+def test_skitarii_prompt_instructs_english():
+    assert "ENGLISH" in SYSTEM_PROMPT_SKITARII
 
 
 def test_tech_priest_prompt_instructs_concise():
-    assert "CONCIS" in SYSTEM_PROMPT_TECH_PRIEST
+    assert "CONCISE" in SYSTEM_PROMPT_TECH_PRIEST
 
 
 def test_skitarii_prompt_instructs_concise():
-    assert "CONCIS" in SYSTEM_PROMPT_SKITARII
+    assert "CONCISE" in SYSTEM_PROMPT_SKITARII
 
 
 def test_prompts_are_different():
@@ -71,11 +71,11 @@ def test_prompts_are_different():
 
 
 def test_tech_priest_prompt_has_liturgical_style():
-    assert "Omnimessie" in SYSTEM_PROMPT_TECH_PRIEST
+    assert "Omnissiah" in SYSTEM_PROMPT_TECH_PRIEST
 
 
 def test_skitarii_prompt_has_military_style():
-    assert "militaire" in SYSTEM_PROMPT_SKITARII.lower()
+    assert "military" in SYSTEM_PROMPT_SKITARII.lower()
 
 
 # ── translate_stream ────────────────────────────────────────────────────────────
@@ -147,6 +147,36 @@ def test_translate_stream_sets_num_predict():
     with patch("translator.ollama.chat", return_value=iter([_make_chunk("x")])) as mock_chat:
         list(translate_stream("test"))
     assert mock_chat.call_args.kwargs["options"]["num_predict"] == 300
+
+
+# ── translate_to_french_stream ─────────────────────────────────────────────────
+
+def test_translate_to_french_stream_yields_tokens():
+    chunks = [_make_chunk("Le vaisseau"), _make_chunk(" de chair")]
+    with patch("translator.ollama.chat", return_value=iter(chunks)):
+        result = list(translate_to_french_stream("The flesh-vessel"))
+    assert result == ["Le vaisseau", " de chair"]
+
+
+def test_translate_to_french_stream_uses_fr_translation_prompt():
+    with patch("translator.ollama.chat", return_value=iter([_make_chunk("x")])) as mock_chat:
+        list(translate_to_french_stream("The flesh-vessel hungers"))
+    messages = mock_chat.call_args.kwargs["messages"]
+    system = next(m for m in messages if m["role"] == "system")
+    assert system["content"] == SYSTEM_PROMPT_FR_TRANSLATION
+
+
+def test_translate_to_french_stream_prompt_differs_from_main_prompts():
+    assert SYSTEM_PROMPT_FR_TRANSLATION != SYSTEM_PROMPT_TECH_PRIEST
+    assert SYSTEM_PROMPT_FR_TRANSLATION != SYSTEM_PROMPT_SKITARII
+
+
+def test_translate_to_french_stream_passes_english_text():
+    with patch("translator.ollama.chat", return_value=iter([_make_chunk("x")])) as mock_chat:
+        list(translate_to_french_stream("sacred cogitator activated"))
+    messages = mock_chat.call_args.kwargs["messages"]
+    user = next(m for m in messages if m["role"] == "user")
+    assert user["content"] == "sacred cogitator activated"
 
 
 # ── get_inference_device ────────────────────────────────────────────────────────
