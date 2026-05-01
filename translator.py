@@ -98,7 +98,16 @@ def translate_stream(text: str, persona: str = PERSONA_TECH_PRIEST,
     if persona == PERSONA_CUSTOM:
         if not custom_prompt:
             raise ValueError("custom_prompt is required when persona is 'custom'.")
-        system_prompt = custom_prompt
+        if mode == MODE_LITANY:
+            system_prompt = custom_prompt + (
+                "\n\nThe user wants a LITANY format:"
+                "\n- A title for the litany"
+                "\n- 3 to 4 short verses or stanzas in the style defined above"
+                "\n- A ritual response or recurring battle cry after each verse"
+                "\nReturn ONLY the litany, no introduction or explanation."
+            )
+        else:
+            system_prompt = custom_prompt
     elif persona not in _PROMPTS:
         raise ValueError(f"Unknown persona: {persona!r}. Choose from {PERSONAS}.")
     else:
