@@ -9,51 +9,61 @@ import webbrowser
 import questionary
 from questionary import Choice
 
-_VRAM_HINTS = [
-    ("70b", "~40 GB"), ("34b", "~20 GB"), ("14b", "~9 GB"), ("13b", "~8 GB"),
-    ("8b", "~5 GB"), ("7b", "~4 GB"), ("3b", "~2 GB"), ("1b", "~1 GB"),
+_MODELS = [
+    ("mistral:7b",    "~4 GB",  "recommended · good balance"),
+    ("llama3.2:3b",   "~2 GB",  "fast · lightweight"),
+    ("llama3.1:8b",   "~5 GB",  "better quality"),
+    ("gemma3:4b",     "~3 GB",  "fast · efficient"),
+    ("qwen2.5:7b",    "~4 GB",  "multilingual"),
+    ("phi4:14b",      "~9 GB",  "high quality · slower"),
+    ("llama3.3:70b",  "~40 GB", "best quality · very slow"),
 ]
-
-
-def _vram_hint(name: str) -> str:
-    n = name.lower()
-    for key, hint in _VRAM_HINTS:
-        if key in n:
-            return hint
-    return "~4 GB"
+_DEFAULT = "mistral:7b"
 
 
 def _pick_model() -> str:
-    try:
-        import ollama
-        models = [getattr(m, "model", getattr(m, "name", "")) for m in ollama.list().models if getattr(m, "model", getattr(m, "name", ""))]
-    except Exception:
-        return "mistral"
-
-    if not models:
-        return "mistral"
-
-    default = next((m for m in models if "mistral" in m.lower()), models[0])
-
     choices = [
         Choice(
-            title=f"{name}  [{_vram_hint(name)} VRAM]{' (recommended)' if name == default else ''}",
+            title=f"{name:<20} [{vram:<8} VRAM]  {note}",
             value=name,
         )
-        for name in models
+        for name, vram, note in _MODELS
     ]
-
     return questionary.select(
         "Select model:",
         choices=choices,
-        default=default,
-    ).ask() or default
+        default=_DEFAULT,
+    ).ask() or _DEFAULT
+
+
+def _ensure_model(model_name: str) -> None:
+    try:
+        import ollama
+        available = {getattr(m, "model", getattr(m, "name", "")) for m in ollama.list().models}
+        if model_name in available:
+            return
+        print(f"Pulling {model_name} — this may take a few minutes...")
+        for progress in ollama.pull(model_name, stream=True):
+            status = getattr(progress, "status", "") or ""
+            completed = getattr(progress, "completed", None)
+            total = getattr(progress, "total", None)
+            if total:
+                pct = int(completed / total * 100) if completed else 0
+                print(f"\r  {status} {pct}%   ", end="", flush=True)
+            elif status:
+                print(f"\r  {status}   ", end="", flush=True)
+        print(f"\r  Done.{' ' * 50}")
+    except Exception as e:
+        print(f"Warning: could not pull {model_name}: {e}")
 
 
 if __name__ == "__main__":
     model = _pick_model()
+    print()
+    _ensure_model(model)
+
     os.environ["MECHANICUS_MODEL"] = model
-    print(f"\nUsing model: {model}\n")
+    print(f"Using model: {model}\n")
 
     from server import app
 
