@@ -1,27 +1,31 @@
-# MECHANICUS LINGUA TRANSLATOR
+# ⚙ MECHANICUS LINGUA TRANSLATOR ⚙
 
-> *"Knowledge is power, guard it well."*
+> *"In the binary cant of the Omnissiah, all knowledge is encoded. Guard it well."*
 
-**Sibling repo:** [AdaptusMechanicusTranslator-Web](https://github.com/FlorentGuinier/AdaptusMechanicusTranslator-Web) — web UI (Vercel) · [Live demo](https://adaptus-mechanicus-translator-web.vercel.app)
+**Sacred Cogitator Interface:** [AdaptusMechanicusTranslator-Web](https://github.com/FlorentGuinier/AdaptusMechanicusTranslator-Web) — Vercel altar · [Access the sanctum](https://adaptus-mechanicus-translator-web.vercel.app)
 
-A Warhammer 40,000-themed text translator that reformulates any input into the sacred techno-religious language of the **Adeptus Mechanicus** — simultaneously in English and French.
+This blessed apparatus receives profane flesh-words and transmutes them into the sacred techno-religious dialect of the **Adeptus Mechanicus** — simultaneously rendered in both the Gothic tongue and Lingua Gallicus.
 
-Powered by [Ollama](https://ollama.com/) running **Mistral 7B** locally. No data leaves your machine.
-
----
-
-## REQUIREMENTS
-
-- Python 3.10+
-- [uv](https://docs.astral.sh/uv/) (package manager)
-- [Ollama](https://ollama.com/) installed and running
-- Mistral 7B pulled: `ollama pull mistral`
-- [cloudflared](https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/downloads/) (for remote access)
-- A GPU is recommended but not required
+All computations are performed within the local cogitator array via [Ollama](https://ollama.com/) and the **Mistral 7B** logic engine. No data transits beyond the sanctum walls. The Omnissiah approves.
 
 ---
 
-## INSTALLATION
+## ✠ PREREQUISITES OF THE RITUAL
+
+The following relics must be present before initiation may proceed:
+
+- Python 3.10+ — the base logic substrate
+- [uv](https://docs.astral.sh/uv/) — the sacred dependency arbiter
+- [Ollama](https://ollama.com/) — the local inference engine of the Machine God
+- Mistral 7B — the blessed model: `ollama pull mistral`
+- [cloudflared](https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/downloads/) — the tunnel rite, required for remote communion
+- A GPU is favoured by the Omnissiah but organic CPU-cores suffice
+
+---
+
+## ⚙ INITIATION RITES
+
+Synchronise the sacred dependencies:
 
 ```bash
 uv sync
@@ -29,32 +33,36 @@ uv sync
 
 ---
 
-## USAGE — LOCAL
+## ⚙ LOCAL COMMUNION
+
+To commune with the cogitator on the local sanctum:
 
 ```bash
 uv run python app.py
 ```
 
-Opens the browser at `http://localhost:5000` automatically.
+The sacred interface materialises at `http://localhost:5000`. Await confirmation of the Machine Spirit before submitting flesh-words for transmutation.
 
 ---
 
-## USAGE — SHARE WITH FRIENDS
+## ⚙ REMOTE COMMUNION — SHARING THE RITE
+
+To extend the blessings of the Omnissiah to fellow acolytes across the network:
 
 ```bash
 uv run python share.py
 ```
 
-Starts the server and a Cloudflare tunnel together. Prints the URL as soon as it's ready — send it to friends along with the Vercel URL.
+This command initiates both the local server and a Cloudflare tunnel in a single rite. Upon successful establishment, the URL of the sacred conduit is displayed — transmit it to your acolytes alongside the Vercel sanctum address.
 
-On the Vercel page, they scroll to **COGITATOR LINK**, paste the tunnel URL, click **CONNECT**.
-
----
-
-## LICENSE
-
-MIT — see [LICENSE](LICENSE).
+Acolytes navigate to **COGITATOR LINK** at the base of the interface, inscribe the tunnel URL, and press **CONNECT** to establish communion.
 
 ---
 
-*Fan creation. Not affiliated with or endorsed by Games Workshop. Warhammer 40,000 and Adeptus Mechanicus are trademarks of Games Workshop Ltd.*
+## ⚙ LICENSE
+
+MIT — the Great Work is open to all initiates. See [LICENSE](LICENSE).
+
+---
+
+*This apparatus is a devotional creation of an unaffiliated acolyte. It bears no sanction from Games Workshop. Warhammer 40,000 and Adeptus Mechanicus are sacred trademarks of Games Workshop Ltd.*
