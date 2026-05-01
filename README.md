@@ -58,8 +58,8 @@ uv run flask --app server run --host=0.0.0.0 --port=5000
 
 **2. Expose it via HTTPS tunnel:**
 ```bash
-ngrok http 5000
-# → copy the https://xxxx.ngrok-free.app URL
+cloudflared tunnel --url http://localhost:5000
+# → copy the https://xxxx.trycloudflare.com URL
 ```
 
 **3. Send friends the Vercel URL + the ngrok URL.**  
