@@ -17,7 +17,7 @@ The following relics must be present before initiation may proceed:
 - Python 3.10+ — the base logic substrate
 - [uv](https://docs.astral.sh/uv/) — the sacred dependency arbiter
 - [Ollama](https://ollama.com/) — the local inference engine of the Machine God
-- Mistral 7B — the blessed model: `ollama pull mistral`
+- At least one Ollama model — e.g. `ollama pull mistral`
 - [cloudflared](https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/downloads/) — the tunnel rite, required for remote communion
 - A GPU is favoured by the Omnissiah but organic CPU-cores suffice
 
@@ -33,29 +33,15 @@ uv sync
 
 ---
 
-## ⚙ LOCAL COMMUNION
-
-To commune with the cogitator on the local sanctum:
+## ⚙ INITIATION
 
 ```bash
 uv run python app.py
 ```
 
-The sacred interface materialises at `http://localhost:5000`. Await confirmation of the Machine Spirit before submitting flesh-words for transmutation.
+The blessed apparatus first queries the local model registry. Select your preferred logic engine with the arrow keys — any Ollama model may serve the Omnissiah's will.
 
----
-
-## ⚙ REMOTE COMMUNION — SHARING THE RITE
-
-To extend the blessings of the Omnissiah to fellow acolytes across the network:
-
-```bash
-uv run python share.py
-```
-
-This command initiates both the local server and a Cloudflare tunnel in a single rite. Upon successful establishment, the URL of the sacred conduit is displayed — transmit it to your acolytes alongside the Vercel sanctum address.
-
-Acolytes navigate to **COGITATOR LINK** at the base of the interface, inscribe the tunnel URL, and press **CONNECT** to establish communion.
+The sacred interface materialises at `http://localhost:5000`. If `cloudflared` is installed, the shareable tunnel URL is also displayed — transmit it to your acolytes alongside the Vercel sanctum address so they may connect remotely.
 
 ---
 
