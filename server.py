@@ -54,7 +54,7 @@ def translate():
             en_tokens.append(token)
             yield f"event: en\ndata: {json.dumps(token)}\n\n"
 
-        for token in translate_to_french_stream("".join(en_tokens)):
+        for token in translate_to_french_stream("".join(en_tokens), persona, custom_prompt):
             yield f"event: fr\ndata: {json.dumps(token)}\n\n"
 
         logging.info("DONE       %.1fs", time.monotonic() - t0)

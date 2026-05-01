@@ -9,7 +9,7 @@ from translator import (
     translate_stream, translate_to_english, translate_to_french_stream,
     get_inference_device, MODEL_NAME, PERSONA_TECH_PRIEST, PERSONA_SKITARII,
     PERSONA_CUSTOM, PERSONAS, SYSTEM_PROMPT_TECH_PRIEST, SYSTEM_PROMPT_SKITARII,
-    SYSTEM_PROMPT_FR_TRANSLATION, SYSTEM_PROMPT_EN_TRANSLATION,
+    SYSTEM_PROMPT_EN_TRANSLATION,
     MODE_REFORMULATE, MODE_LITANY, MODES,
     SYSTEM_PROMPT_LITANY_TECH_PRIEST, SYSTEM_PROMPT_LITANY_SKITARII,
 )
@@ -371,12 +371,40 @@ def test_translate_to_french_stream_uses_fr_translation_prompt():
         list(translate_to_french_stream("The flesh-vessel hungers"))
     messages = mock_chat.call_args.kwargs["messages"]
     system = next(m for m in messages if m["role"] == "system")
-    assert system["content"] == SYSTEM_PROMPT_FR_TRANSLATION
+    assert "French" in system["content"] or "french" in system["content"]
+
+
+def test_translate_to_french_stream_includes_persona_style_hint():
+    with patch("translator.ollama.chat", return_value=iter([_make_chunk("x")])) as mock_chat:
+        list(translate_to_french_stream("text", PERSONA_TECH_PRIEST))
+    messages = mock_chat.call_args.kwargs["messages"]
+    system = next(m for m in messages if m["role"] == "system")
+    assert "Tech-Priest" in system["content"]
+
+
+def test_translate_to_french_stream_skitarii_hint():
+    with patch("translator.ollama.chat", return_value=iter([_make_chunk("x")])) as mock_chat:
+        list(translate_to_french_stream("text", PERSONA_SKITARII))
+    messages = mock_chat.call_args.kwargs["messages"]
+    system = next(m for m in messages if m["role"] == "system")
+    assert "Skitarii" in system["content"]
+
+
+def test_translate_to_french_stream_custom_uses_first_line_of_prompt():
+    with patch("translator.ollama.chat", return_value=iter([_make_chunk("x")])) as mock_chat:
+        list(translate_to_french_stream("text", PERSONA_CUSTOM, custom_prompt="You are an Ork Warboss.\nMore stuff."))
+    messages = mock_chat.call_args.kwargs["messages"]
+    system = next(m for m in messages if m["role"] == "system")
+    assert "You are an Ork Warboss" in system["content"]
 
 
 def test_translate_to_french_stream_prompt_differs_from_main_prompts():
-    assert SYSTEM_PROMPT_FR_TRANSLATION != SYSTEM_PROMPT_TECH_PRIEST
-    assert SYSTEM_PROMPT_FR_TRANSLATION != SYSTEM_PROMPT_SKITARII
+    with patch("translator.ollama.chat", return_value=iter([_make_chunk("x")])) as mock_chat:
+        list(translate_to_french_stream("text", PERSONA_TECH_PRIEST))
+    messages = mock_chat.call_args.kwargs["messages"]
+    system = next(m for m in messages if m["role"] == "system")
+    assert system["content"] != SYSTEM_PROMPT_TECH_PRIEST
+    assert system["content"] != SYSTEM_PROMPT_SKITARII
 
 
 def test_translate_to_french_stream_passes_english_text():

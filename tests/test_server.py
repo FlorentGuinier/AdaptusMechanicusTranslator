@@ -205,7 +205,7 @@ def test_translate_passes_collected_en_to_french_stream(client):
         mock_fr.return_value = iter(["Le Dieu-Machine"])
         r = client.post("/translate", json={"text": "test", "input_lang": "english"})
         _ = r.data  # force generator consumption before patches are released
-    mock_fr.assert_called_once_with("The Machine God")
+    mock_fr.assert_called_once_with("The Machine God", "tech_priest", "")
 
 
 def test_translate_defaults_to_tech_priest_persona(client):

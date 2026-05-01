@@ -122,7 +122,9 @@ def translate_stream(text: str, persona: str = PERSONA_TECH_PRIEST,
             yield token
 
 
-SYSTEM_PROMPT_FR_TRANSLATION = """You are a translator. Translate the following text into French, preserving its tone, style, and vocabulary as faithfully as possible. Do not change the persona or register — if the text is written in the style of an Ork, a pirate, or any other character, keep that style in French.
+_SYSTEM_PROMPT_FR_TRANSLATION = """You are a translator. Translate the following text into French.
+The text is written in the style of: {style_hint}
+Preserve that style, tone, and vocabulary as faithfully as possible in French. Do not change the persona or register.
 
 Return ONLY the French translation, no introduction or explanation."""
 
@@ -151,7 +153,14 @@ def translate_to_english(text: str) -> str:
     return (result.message.content or text).strip()
 
 
-def translate_to_french_stream(english_text: str) -> Iterator[str]:
+_FR_STYLE_HINTS = {
+    PERSONA_TECH_PRIEST: "a Tech-Priest of the Adeptus Mechanicus (Warhammer 40,000) — techno-religious, emotionless, with Mechanicus vocabulary (e.g. flesh-vessel → vaisseau de chair, Omnissiah → Omnimessie, sacred cogitator → cogitateur sacré)",
+    PERSONA_SKITARII:    "a Skitarii cybernetic soldier (Warhammer 40,000) — terse, military, direct combat-report style",
+}
+
+
+def translate_to_french_stream(english_text: str, persona: str = PERSONA_TECH_PRIEST,
+                                custom_prompt: str = "") -> Iterator[str]:
     """
     Translate an English Mechanicus text to French, preserving style.
 
@@ -161,10 +170,16 @@ def translate_to_french_stream(english_text: str) -> Iterator[str]:
     Yields:
         Non-empty string tokens as they are generated.
     """
+    if persona == PERSONA_CUSTOM:
+        first_line = (custom_prompt.strip().splitlines() or ["a custom persona"])[0].rstrip(".")
+        style_hint = first_line
+    else:
+        style_hint = _FR_STYLE_HINTS.get(persona, "an unknown persona")
+    system_prompt = _SYSTEM_PROMPT_FR_TRANSLATION.format(style_hint=style_hint)
     for chunk in ollama.chat(
         model=MODEL_NAME,
         messages=[
-            {"role": "system", "content": SYSTEM_PROMPT_FR_TRANSLATION},
+            {"role": "system", "content": system_prompt},
             {"role": "user", "content": english_text},
         ],
         stream=True,
