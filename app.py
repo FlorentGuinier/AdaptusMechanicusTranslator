@@ -10,15 +10,17 @@ import questionary
 from questionary import Choice
 
 _MODELS = [
-    ("mistral:7b",    "~4 GB",  "recommended · good balance"),
-    ("llama3.2:3b",   "~2 GB",  "fast · lightweight"),
-    ("llama3.1:8b",   "~5 GB",  "better quality"),
-    ("gemma3:4b",     "~3 GB",  "fast · efficient"),
-    ("qwen2.5:7b",    "~4 GB",  "multilingual"),
-    ("phi4:14b",      "~9 GB",  "high quality · slower"),
-    ("llama3.3:70b",  "~40 GB", "best quality · very slow"),
+    ("llama3.2:3b",      "~2 GB",  "fast · lightweight    — 4 GB GPU"),
+    ("gemma3:4b",        "~3 GB",  "efficient · capable   — 4 GB GPU"),
+    ("mistral:7b",       "~4 GB",  "classic · reliable    — 6 GB GPU"),
+    ("llama3.1:8b",      "~5 GB",  "great quality         — 8 GB GPU  ← recommended"),
+    ("mistral-nemo:12b", "~7 GB",  "excellent balance     — 10 GB GPU"),
+    ("phi4:14b",         "~9 GB",  "high quality          — 12 GB GPU"),
+    ("qwen2.5:14b",      "~9 GB",  "multilingual · smart  — 12 GB GPU"),
+    ("gemma3:27b",       "~16 GB", "very high quality     — 20 GB GPU"),
+    ("qwen2.5:32b",      "~19 GB", "top tier              — 24 GB GPU"),
 ]
-_DEFAULT = "mistral:7b"
+_DEFAULT = "llama3.1:8b"
 
 
 def _pick_model() -> str:
