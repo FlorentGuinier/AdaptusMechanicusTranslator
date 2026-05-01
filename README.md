@@ -10,7 +10,7 @@ All computations are performed within the local cogitator array via [Ollama](htt
 
 ---
 
-## ✠ PREREQUISITES OF THE RITUAL
+## ⚙ PREREQUISITES OF THE RITUAL
 
 The following relics must be present before initiation may proceed:
 
