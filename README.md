@@ -23,27 +23,33 @@ Powered by [Ollama](https://ollama.com/) running **Mistral 7B** locally. No data
 
 ```bash
 uv sync
-uv run mechanicus_translator.py
+uv run python app.py
 ```
 
 ### Using `pip`
 
 ```bash
-pip install customtkinter ollama
-python mechanicus_translator.py
+pip install flask ollama
+python app.py
 ```
 
-On first launch, if Mistral 7B is not already pulled, the app will download it automatically (~4 GB). Progress is displayed in the status bar.
+On first launch, if Mistral 7B is not already pulled, the app will download it automatically (~4 GB).
 
 ---
 
 ## USAGE — OPERATION OF THE SACRED COGITATOR
 
-1. Launch the application
-2. Wait for the status bar to confirm the model is loaded
+```bash
+uv run python app.py
+```
+
+This starts the local server and opens the browser at `http://localhost:5000`.
+
+1. Wait for the status bar to confirm the model is loaded
+2. Select persona, mode, and input language
 3. Enter your profane flesh-words in the input field
 4. Click **TRANSMUTE TO BINARIC CANT**
-5. Receive the blessed output in both French and English
+5. Receive the blessed output in both English and French
 6. Use the **COPY** buttons to copy each translation to clipboard
 
 ---
@@ -54,12 +60,12 @@ Translate text directly from the terminal, tokens stream in real time:
 
 ```bash
 uv run python cli.py "I need to sleep"
-uv run python cli.py "I need to sleep" --lang fr
-uv run python cli.py "I need to sleep" --lang en
+uv run python cli.py "I need to sleep" --persona skitarii
+uv run python cli.py "cogitator" --mode litany
 echo "The machine hungers" | uv run python cli.py
 ```
 
-`--lang` accepts `fr`, `en`, or `both` (default).
+`--persona` accepts `tech_priest` (default) or `skitarii`. `--mode` accepts `reformulate` (default) or `litany`.
 
 ---
 
@@ -84,12 +90,14 @@ uv run pytest -x    # stop on first failure
 ## PROJECT STRUCTURE
 
 ```
-mechanicus_translator.py   # GUI application
+app.py                     # Entry point — starts server and opens browser
+server.py                  # Flask server with SSE /translate endpoint
 translator.py              # Core translation logic (no GUI dependency)
 cli.py                     # Command-line interface for fast iteration
 tests/
-    test_translator.py     # Unit tests (15 tests, all mocked)
+    test_translator.py     # Unit tests (all mocked)
 pyproject.toml             # Project metadata and dependencies
+../AdaptusMechanicusTranslator-Web/index.html   # Web UI (served by Flask)
 ```
 
 ---

@@ -2,7 +2,27 @@
   "permissions": {
     "allow": [
       "Bash(git init:*)",
-      "Bash(uv lock:*)"
+      "Bash(uv lock:*)",
+      "Bash(git -C \"D:/GitRepos/Epic/Test\" config --global credential.helper)",
+      "Bash(git -C \"D:/GitRepos/Epic/Test\" ls-remote origin HEAD)",
+      "Bash(gh auth:*)",
+      "Bash(git -C \"D:/GitRepos/Epic/Test\" config --global --list)",
+      "Bash(git credential-manager:*)",
+      "Bash(git credential-wincred:*)",
+      "Bash(git config:*)",
+      "Bash(git -C \"D:/GitRepos/Epic/Test\" add README.md LICENSE .gitignore)",
+      "Bash(git -C \"D:/GitRepos/Epic/Test\" status)",
+      "Bash(git -C:*)",
+      "Bash(.venv/Scripts/python:*)",
+      "Bash(.venv/Scripts/pip show:*)",
+      "Bash(\"D:/GitRepos/Epic/Test/.venv/Scripts/python.exe\":*)",
+      "Bash(\"D:/GitRepos/Epic/Test/.venv/Scripts/python.exe\" -c:*)",
+      "Bash(uv sync:*)",
+      "Bash(uv run pytest:*)",
+      "Bash(uv run python:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)"
     ]
   }
 }

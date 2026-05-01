@@ -280,7 +280,7 @@ class MechanicusApp(ctk.CTk):
     # ──────────────────────────────────────────────────
     def _clear_placeholder(self, _event):
         current = self.input_text.get("0.0", "end").strip()
-        if current == "Entrez votre texte ici — Enter your text here...":
+        if current == "Enter your text here...":
             self.input_text.delete("0.0", "end")
 
     def _set_status(self, text: str, color: str = TEXT_DIM):

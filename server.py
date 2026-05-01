@@ -1,0 +1,56 @@
+import json
+from pathlib import Path
+
+import ollama
+from flask import Flask, Response, request, send_file, stream_with_context
+
+from translator import (PERSONA_TECH_PRIEST, MODE_REFORMULATE,
+                        translate_stream, translate_to_english,
+                        translate_to_french_stream)
+
+_INDEX = Path(__file__).parent.parent / "AdaptusMechanicusTranslator-Web" / "index.html"
+
+app = Flask(__name__)
+
+
+@app.route("/")
+def index():
+    return send_file(_INDEX)
+
+
+@app.route("/status")
+def status():
+    try:
+        names = [getattr(m, "model", getattr(m, "name", "")) for m in ollama.list().models]
+        ok = any("mistral" in n.lower() for n in names)
+        return {"ok": ok}
+    except Exception:
+        return {"ok": False}
+
+
+@app.route("/translate", methods=["POST"])
+def translate():
+    data       = request.get_json(force=True)
+    text       = data.get("text", "")
+    persona    = data.get("persona", PERSONA_TECH_PRIEST)
+    mode       = data.get("mode", MODE_REFORMULATE)
+    input_lang = data.get("input_lang", "english")
+
+    def generate():
+        en_input = translate_to_english(text) if input_lang == "french" else text
+
+        en_tokens = []
+        for token in translate_stream(en_input, persona, "english", mode):
+            en_tokens.append(token)
+            yield f"event: en\ndata: {json.dumps(token)}\n\n"
+
+        for token in translate_to_french_stream("".join(en_tokens)):
+            yield f"event: fr\ndata: {json.dumps(token)}\n\n"
+
+        yield "event: done\ndata: {}\n\n"
+
+    return Response(
+        stream_with_context(generate()),
+        content_type="text/event-stream",
+        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
+    )
