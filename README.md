@@ -53,19 +53,14 @@ The web UI is also hosted on Vercel at:
 
 To let friends connect to your local server:
 
-**1. Start the server (accessible on the network):**
 ```bash
-uv run flask --app server run --host=0.0.0.0 --port=5000
+uv run python share.py
 ```
 
-**2. Expose it via HTTPS tunnel:**
-```bash
-cloudflared tunnel --url http://localhost:5000
-# → copy the https://xxxx.trycloudflare.com URL
-```
+This starts the server and the tunnel together, and prints the URL to share as soon as it's ready.
 
-**3. Send friends the Vercel URL + the ngrok URL.**  
-On the Vercel page, they scroll to **COGITATOR LINK**, paste the ngrok URL, click **CONNECT**.
+Send friends the Vercel URL + the tunnel URL.  
+On the Vercel page, they scroll to **COGITATOR LINK**, paste the URL, click **CONNECT**.
 
 The URL is saved in their browser's localStorage — they only need to enter it once per ngrok session.
 
