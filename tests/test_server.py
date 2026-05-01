@@ -62,18 +62,15 @@ def test_prompts_returns_both_personas(client):
     assert "skitarii" in data
 
 
-def test_prompts_each_persona_has_both_modes(client):
-    data = client.get("/prompts").get_json()
-    for persona in ("tech_priest", "skitarii"):
-        assert "reformulate" in data[persona]
-        assert "litany" in data[persona]
-
-
 def test_prompts_content_not_empty(client):
     data = client.get("/prompts").get_json()
     for persona in ("tech_priest", "skitarii"):
-        for mode in ("reformulate", "litany"):
-            assert len(data[persona][mode]) > 50
+        assert len(data[persona]) > 50
+
+
+def test_prompts_personas_differ(client):
+    data = client.get("/prompts").get_json()
+    assert data["tech_priest"] != data["skitarii"]
 
 
 # ── GET /status ────────────────────────────────────────────────────────────────

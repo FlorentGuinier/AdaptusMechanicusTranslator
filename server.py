@@ -11,8 +11,7 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s  %(message)s", datef
 
 from translator import (PERSONA_TECH_PRIEST, PERSONA_CUSTOM, MODE_REFORMULATE,
                         translate_stream, translate_to_english, translate_to_french_stream,
-                        SYSTEM_PROMPT_TECH_PRIEST, SYSTEM_PROMPT_SKITARII,
-                        SYSTEM_PROMPT_LITANY_TECH_PRIEST, SYSTEM_PROMPT_LITANY_SKITARII)
+                        SYSTEM_PROMPT_TECH_PRIEST, SYSTEM_PROMPT_SKITARII)
 
 _INDEX = Path(__file__).parent.parent / "AdaptusMechanicusTranslator-Web" / "index.html"
 
@@ -28,14 +27,8 @@ def index():
 @app.route("/prompts")
 def prompts():
     return {
-        "tech_priest": {
-            "reformulate": SYSTEM_PROMPT_TECH_PRIEST,
-            "litany":      SYSTEM_PROMPT_LITANY_TECH_PRIEST,
-        },
-        "skitarii": {
-            "reformulate": SYSTEM_PROMPT_SKITARII,
-            "litany":      SYSTEM_PROMPT_LITANY_SKITARII,
-        },
+        "tech_priest": SYSTEM_PROMPT_TECH_PRIEST,
+        "skitarii":    SYSTEM_PROMPT_SKITARII,
     }
 
 
