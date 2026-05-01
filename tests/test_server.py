@@ -52,6 +52,30 @@ def test_index_returns_html(client):
     assert b"<!DOCTYPE html>" in r.data or b"<!doctype html>" in r.data.lower()
 
 
+# ── GET /prompts ───────────────────────────────────────────────────────────────
+
+def test_prompts_returns_both_personas(client):
+    r = client.get("/prompts")
+    assert r.status_code == 200
+    data = r.get_json()
+    assert "tech_priest" in data
+    assert "skitarii" in data
+
+
+def test_prompts_each_persona_has_both_modes(client):
+    data = client.get("/prompts").get_json()
+    for persona in ("tech_priest", "skitarii"):
+        assert "reformulate" in data[persona]
+        assert "litany" in data[persona]
+
+
+def test_prompts_content_not_empty(client):
+    data = client.get("/prompts").get_json()
+    for persona in ("tech_priest", "skitarii"):
+        for mode in ("reformulate", "litany"):
+            assert len(data[persona][mode]) > 50
+
+
 # ── GET /status ────────────────────────────────────────────────────────────────
 
 def test_status_true_when_any_model_present(client):
