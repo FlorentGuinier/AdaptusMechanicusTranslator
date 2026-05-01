@@ -1,62 +1,77 @@
-# ⚙ MECHANICUS LINGUA TRANSLATOR ⚙
+# MECHANICUS LINGUA TRANSLATOR
 
 > *"Knowledge is power, guard it well."*
 
-A Warhammer 40,000-themed text translator that reformulates any input into the sacred techno-religious language of the **Adeptus Mechanicus** — simultaneously in French and English.
+A Warhammer 40,000-themed text translator that reformulates any input into the sacred techno-religious language of the **Adeptus Mechanicus** — simultaneously in English and French.
 
-Powered by [Ollama](https://ollama.com/) running **Mistral 7B** locally. No data leaves your machine. The Omnissiah approves.
+Powered by [Ollama](https://ollama.com/) running **Mistral 7B** locally. No data leaves your machine.
 
 ---
 
-## REQUIREMENTS — PREREQUISITES OF THE RITUAL
+## REQUIREMENTS
 
 - Python 3.10+
+- [uv](https://docs.astral.sh/uv/) (package manager)
 - [Ollama](https://ollama.com/) installed and running
-- Mistral 7B model (auto-downloaded on first launch if not present)
-- A GPU is recommended but not required (CPU mode works)
+- Mistral 7B pulled: `ollama pull mistral`
+- A GPU is recommended but not required
 
 ---
 
-## INSTALLATION — INITIATION RITES
-
-### Using `uv` (recommended)
+## INSTALLATION
 
 ```bash
 uv sync
-uv run python app.py
 ```
-
-### Using `pip`
-
-```bash
-pip install flask ollama
-python app.py
-```
-
-On first launch, if Mistral 7B is not already pulled, the app will download it automatically (~4 GB).
 
 ---
 
-## USAGE — OPERATION OF THE SACRED COGITATOR
+## USAGE — LOCAL
+
+Start the server and open the browser automatically:
 
 ```bash
 uv run python app.py
 ```
 
-This starts the local server and opens the browser at `http://localhost:5000`.
+The browser opens at `http://localhost:5000`.
 
 1. Wait for the status bar to confirm the model is loaded
 2. Select persona, mode, and input language
-3. Enter your profane flesh-words in the input field
+3. Enter text in the input field
 4. Click **TRANSMUTE TO BINARIC CANT**
-5. Receive the blessed output in both English and French
-6. Use the **COPY** buttons to copy each translation to clipboard
+5. Use the **COPY** buttons to copy each translation
 
 ---
 
-## CLI — FAST ITERATION WITHOUT THE GUI
+## USAGE — REMOTE (share with friends)
 
-Translate text directly from the terminal, tokens stream in real time:
+The web UI is also hosted on Vercel at:  
+**https://adaptus-mechanicus-translator-web.vercel.app**
+
+To let friends connect to your local server:
+
+**1. Start the server (accessible on the network):**
+```bash
+uv run flask --app server run --host=0.0.0.0 --port=5000
+```
+
+**2. Expose it via HTTPS tunnel:**
+```bash
+ngrok http 5000
+# → copy the https://xxxx.ngrok-free.app URL
+```
+
+**3. Send friends the Vercel URL + the ngrok URL.**  
+On the Vercel page, they scroll to **COGITATOR LINK**, paste the ngrok URL, click **CONNECT**.
+
+The URL is saved in their browser's localStorage — they only need to enter it once per ngrok session.
+
+---
+
+## CLI
+
+Translate directly from the terminal:
 
 ```bash
 uv run python cli.py "I need to sleep"
@@ -65,47 +80,44 @@ uv run python cli.py "cogitator" --mode litany
 echo "The machine hungers" | uv run python cli.py
 ```
 
-`--persona` accepts `tech_priest` (default) or `skitarii`. `--mode` accepts `reformulate` (default) or `litany`.
+`--persona`: `tech_priest` (default) or `skitarii`  
+`--mode`: `reformulate` (default) or `litany`
 
 ---
 
-## DEVELOPMENT — RITES OF VERIFICATION
-
-Install dev dependencies and run the test suite:
+## DEVELOPMENT
 
 ```bash
-uv sync --group dev
-uv run pytest
+uv sync
+uv run python -m pytest
+uv run python -m pytest -v    # verbose
+uv run python -m pytest -x    # stop on first failure
 ```
 
-Tests cover the translation module (`translator.py`) in isolation — no live Ollama connection required, all ollama calls are mocked.
-
-```bash
-uv run pytest -v    # verbose output
-uv run pytest -x    # stop on first failure
-```
+All tests are mocked — no live Ollama connection required.
 
 ---
 
 ## PROJECT STRUCTURE
 
 ```
-app.py                     # Entry point — starts server and opens browser
-server.py                  # Flask server with SSE /translate endpoint
-translator.py              # Core translation logic (no GUI dependency)
-cli.py                     # Command-line interface for fast iteration
+app.py                    # Entry point — starts server and opens browser
+server.py                 # Flask API server (SSE streaming)
+translator.py             # Core translation logic
+cli.py                    # Command-line interface
 tests/
-    test_translator.py     # Unit tests (all mocked)
-pyproject.toml             # Project metadata and dependencies
-../AdaptusMechanicusTranslator-Web/index.html   # Web UI (served by Flask)
+    test_translator.py    # Unit tests for translator.py
+    test_server.py        # Unit tests for server.py
+pyproject.toml            # Dependencies (managed by uv)
+../AdaptusMechanicusTranslator-Web/index.html   # Web UI
 ```
 
 ---
 
 ## LICENSE
 
-MIT — do whatever you want with this. See [LICENSE](LICENSE) for the full text.
+MIT — see [LICENSE](LICENSE).
 
 ---
 
-*This project is a fan creation and is not affiliated with or endorsed by Games Workshop. Warhammer 40,000 and Adeptus Mechanicus are trademarks of Games Workshop Ltd.*
+*Fan creation. Not affiliated with or endorsed by Games Workshop. Warhammer 40,000 and Adeptus Mechanicus are trademarks of Games Workshop Ltd.*
