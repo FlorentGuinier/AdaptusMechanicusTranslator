@@ -5,6 +5,7 @@ from pathlib import Path
 
 import ollama
 from flask import Flask, Response, request, send_file, stream_with_context
+from flask_cors import CORS
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s  %(message)s", datefmt="%H:%M:%S")
 
@@ -15,6 +16,7 @@ from translator import (PERSONA_TECH_PRIEST, PERSONA_CUSTOM, MODE_REFORMULATE,
 _INDEX = Path(__file__).parent.parent / "AdaptusMechanicusTranslator-Web" / "index.html"
 
 app = Flask(__name__)
+CORS(app)
 
 
 @app.route("/")
