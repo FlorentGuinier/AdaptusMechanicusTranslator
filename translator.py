@@ -1,10 +1,11 @@
 """
 translator.py — Core translation logic, no GUI dependency.
 """
+import os
 import ollama
 from typing import Iterator
 
-MODEL_NAME = "mistral"
+MODEL_NAME = os.environ.get("MECHANICUS_MODEL", "mistral")
 
 PERSONA_TECH_PRIEST = "tech_priest"
 PERSONA_SKITARII    = "skitarii"
