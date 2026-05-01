@@ -2,6 +2,8 @@
 
 > *"Knowledge is power, guard it well."*
 
+**Sibling repo:** [AdaptusMechanicusTranslator-Web](https://github.com/FlorentGuinier/AdaptusMechanicusTranslator-Web) — web UI (Vercel) · [Live demo](https://adaptus-mechanicus-translator-web.vercel.app)
+
 A Warhammer 40,000-themed text translator that reformulates any input into the sacred techno-religious language of the **Adeptus Mechanicus** — simultaneously in English and French.
 
 Powered by [Ollama](https://ollama.com/) running **Mistral 7B** locally. No data leaves your machine.
