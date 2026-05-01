@@ -13,7 +13,7 @@ _MODELS = [
     ("gemma3:4b",   "~3 GB",  "4 GB GPU"),
     ("llama3.1:8b", "~5 GB",  "8 GB GPU  ← recommended"),
     ("phi4:14b",    "~9 GB",  "12 GB GPU"),
-    ("gemma3:27b",  "~16 GB", "20 GB GPU"),
+    ("qwen2.5:32b", "~19 GB", "24 GB GPU"),
 ]
 _DEFAULT = "llama3.1:8b"
 
