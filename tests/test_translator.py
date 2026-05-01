@@ -8,7 +8,7 @@ import translator
 from translator import (
     translate_stream, translate_to_english, translate_to_french_stream,
     get_inference_device, MODEL_NAME, PERSONA_TECH_PRIEST, PERSONA_SKITARII,
-    PERSONAS, SYSTEM_PROMPT_TECH_PRIEST, SYSTEM_PROMPT_SKITARII,
+    PERSONA_CUSTOM, PERSONAS, SYSTEM_PROMPT_TECH_PRIEST, SYSTEM_PROMPT_SKITARII,
     SYSTEM_PROMPT_FR_TRANSLATION, SYSTEM_PROMPT_EN_TRANSLATION,
     MODE_REFORMULATE, MODE_LITANY, MODES,
     SYSTEM_PROMPT_LITANY_TECH_PRIEST, SYSTEM_PROMPT_LITANY_SKITARII,
@@ -42,11 +42,13 @@ def test_model_name_is_mistral():
 def test_personas_defined():
     assert PERSONA_TECH_PRIEST == "tech_priest"
     assert PERSONA_SKITARII == "skitarii"
+    assert PERSONA_CUSTOM == "custom"
 
 
 def test_personas_tuple_contains_both():
     assert PERSONA_TECH_PRIEST in PERSONAS
     assert PERSONA_SKITARII in PERSONAS
+    assert PERSONA_CUSTOM in PERSONAS
 
 
 def test_tech_priest_prompt_not_empty():
@@ -177,6 +179,32 @@ def test_translate_stream_unknown_persona_raises():
 def test_translate_stream_unknown_mode_raises():
     with pytest.raises(ValueError, match="Unknown mode"):
         list(translate_stream("hello", mode="chant"))
+
+
+def test_translate_stream_custom_persona_uses_custom_prompt():
+    with patch("translator.ollama.chat", return_value=iter([_make_chunk("x")])) as mock_chat:
+        list(translate_stream("test", PERSONA_CUSTOM, custom_prompt="Be a pirate."))
+    messages = mock_chat.call_args.kwargs["messages"]
+    system = next(m for m in messages if m["role"] == "system")
+    assert system["content"] == "Be a pirate."
+
+
+def test_translate_stream_custom_persona_empty_prompt_raises():
+    with pytest.raises(ValueError, match="custom_prompt"):
+        list(translate_stream("hello", PERSONA_CUSTOM, custom_prompt=""))
+
+
+def test_translate_stream_custom_persona_no_prompt_raises():
+    with pytest.raises(ValueError, match="custom_prompt"):
+        list(translate_stream("hello", PERSONA_CUSTOM))
+
+
+def test_translate_stream_custom_persona_does_not_use_builtin_prompts():
+    with patch("translator.ollama.chat", return_value=iter([_make_chunk("x")])) as mock_chat:
+        list(translate_stream("test", PERSONA_CUSTOM, custom_prompt="My prompt"))
+    messages = mock_chat.call_args.kwargs["messages"]
+    system = next(m for m in messages if m["role"] == "system")
+    assert system["content"] not in (SYSTEM_PROMPT_TECH_PRIEST, SYSTEM_PROMPT_SKITARII)
 
 
 def test_translate_stream_uses_tech_priest_prompt_by_default():

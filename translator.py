@@ -8,7 +8,8 @@ MODEL_NAME = "mistral"
 
 PERSONA_TECH_PRIEST = "tech_priest"
 PERSONA_SKITARII    = "skitarii"
-PERSONAS = (PERSONA_TECH_PRIEST, PERSONA_SKITARII)
+PERSONA_CUSTOM      = "custom"
+PERSONAS = (PERSONA_TECH_PRIEST, PERSONA_SKITARII, PERSONA_CUSTOM)
 
 SYSTEM_PROMPT_TECH_PRIEST = """You are a Tech-Priest of the Adeptus Mechanicus in the Warhammer 40,000 universe.
 You have undergone the Rite of Pure Thought — your emotional centers have been surgically excised and replaced with binaric logic engines. You are incapable of emotion; only cold machine-logic remains.
@@ -26,7 +27,7 @@ Style rules:
 - Sleep = "mandatory neural defragmentation cycle"
 - Pain = "critical damage signal from the flesh-vessel"
 - References to the Omnissiah, the Machine God, Sacred Rites, the Great Work
-- Occasional binary interjections (e.g.: 01001111 01101101 01101110...)
+- Occasional binary interjections, maximum 2–3 bytes (e.g.: 01001111 01101101) — never long binary sequences
 - Devoid of warmth or empathy — purely logical, machine-like in delivery
 
 IMPORTANT: Be CONCISE — one or two sentences maximum, similar in length to the input.
@@ -66,7 +67,7 @@ A litany has:
 - A title (e.g. "Litany of the Blessed Cogitator")
 - 3 to 4 short verses, each ending with a ritual response (e.g. "So it is written in the Omnissiah's code.")
 - Techno-religious vocabulary: Omnissiah, flesh-vessel, sacred cogitator, Machine God, Great Work, binaric cant
-- Occasional binary interjections (e.g. 01001111 01101101...)
+- Occasional binary interjections, maximum 2–3 bytes (e.g. 01001111 01101101) — never long binary sequences
 - Solemn, ceremonial, yet utterly emotionless — cold logic dressed in liturgy
 
 Return ONLY the litany, no introduction or explanation."""
@@ -91,33 +92,25 @@ _LITANY_PROMPTS = {
 
 def translate_stream(text: str, persona: str = PERSONA_TECH_PRIEST,
                      input_lang: str = "english",
-                     mode: str = MODE_REFORMULATE) -> Iterator[str]:
-    """
-    Yield translation tokens one by one in Adeptus Mechanicus style.
-
-    Args:
-        text:       Input text to translate.
-        persona:    Speaking persona — PERSONA_TECH_PRIEST or PERSONA_SKITARII.
-        input_lang: Language of the input text, e.g. "english" or "french".
-        mode:       Output mode — MODE_REFORMULATE or MODE_LITANY.
-
-    Yields:
-        Non-empty string tokens as they are generated.
-
-    Raises:
-        ValueError: If persona or mode is unknown.
-    """
-    if persona not in _PROMPTS:
+                     mode: str = MODE_REFORMULATE,
+                     custom_prompt: str = "") -> Iterator[str]:
+    if persona == PERSONA_CUSTOM:
+        if not custom_prompt:
+            raise ValueError("custom_prompt is required when persona is 'custom'.")
+        system_prompt = custom_prompt
+    elif persona not in _PROMPTS:
         raise ValueError(f"Unknown persona: {persona!r}. Choose from {PERSONAS}.")
+    else:
+        prompt_map = _LITANY_PROMPTS if mode == MODE_LITANY else _PROMPTS
+        system_prompt = prompt_map[persona]
     if mode not in MODES:
         raise ValueError(f"Unknown mode: {mode!r}. Choose from {MODES}.")
-    prompt_map = _LITANY_PROMPTS if mode == MODE_LITANY else _PROMPTS
     num_predict = 600 if mode == MODE_LITANY else 300
     user_message = f"[Input language: {input_lang}. Respond in {input_lang}.]\n{text}"
     for chunk in ollama.chat(
         model=MODEL_NAME,
         messages=[
-            {"role": "system", "content": prompt_map[persona]},
+            {"role": "system", "content": system_prompt},
             {"role": "user", "content": user_message},
         ],
         stream=True,

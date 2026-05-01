@@ -220,3 +220,20 @@ def test_translate_defaults_to_reformulate_mode(client):
          patch("server.translate_to_french_stream", return_value=iter(["y"])):
         client.post("/translate", json={"text": "t", "input_lang": "english"})
     assert mock_ts.call_args.args[3] == "reformulate"
+
+
+def test_translate_passes_custom_prompt_to_translate_stream(client):
+    with patch("server.translate_stream", return_value=iter(["x"])) as mock_ts, \
+         patch("server.translate_to_french_stream", return_value=iter(["y"])):
+        client.post("/translate", json={
+            "text": "t", "persona": "custom",
+            "custom_prompt": "Be a pirate.", "input_lang": "english",
+        })
+    assert mock_ts.call_args.args[4] == "Be a pirate."
+
+
+def test_translate_default_custom_prompt_is_empty(client):
+    with patch("server.translate_stream", return_value=iter(["x"])) as mock_ts, \
+         patch("server.translate_to_french_stream", return_value=iter(["y"])):
+        client.post("/translate", json={"text": "t", "input_lang": "english"})
+    assert mock_ts.call_args.args[4] == ""
