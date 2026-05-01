@@ -122,7 +122,7 @@ def translate_stream(text: str, persona: str = PERSONA_TECH_PRIEST,
             yield token
 
 
-SYSTEM_PROMPT_FR_TRANSLATION = """You are a translator. The user will provide a text written in the style of the Adeptus Mechanicus (Warhammer 40,000). Translate it into French, preserving the techno-religious tone and Mechanicus vocabulary where French equivalents exist (e.g. flesh-vessel → vaisseau de chair, Omnissiah → Omnimessie, sacred cogitator → cogitateur sacré).
+SYSTEM_PROMPT_FR_TRANSLATION = """You are a translator. Translate the following text into French, preserving its tone, style, and vocabulary as faithfully as possible. Do not change the persona or register — if the text is written in the style of an Ork, a pirate, or any other character, keep that style in French.
 
 Return ONLY the French translation, no introduction or explanation."""
 
