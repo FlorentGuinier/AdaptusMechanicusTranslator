@@ -7,6 +7,20 @@ import time
 import webbrowser
 
 import questionary
+from questionary import Choice
+
+_VRAM_HINTS = [
+    ("70b", "~40 GB"), ("34b", "~20 GB"), ("14b", "~9 GB"), ("13b", "~8 GB"),
+    ("8b", "~5 GB"), ("7b", "~4 GB"), ("3b", "~2 GB"), ("1b", "~1 GB"),
+]
+
+
+def _vram_hint(name: str) -> str:
+    n = name.lower()
+    for key, hint in _VRAM_HINTS:
+        if key in n:
+            return hint
+    return "~4 GB"
 
 
 def _pick_model() -> str:
@@ -21,9 +35,17 @@ def _pick_model() -> str:
 
     default = next((m for m in models if "mistral" in m.lower()), models[0])
 
+    choices = [
+        Choice(
+            title=f"{name}  [{_vram_hint(name)} VRAM]{' (recommended)' if name == default else ''}",
+            value=name,
+        )
+        for name in models
+    ]
+
     return questionary.select(
         "Select model:",
-        choices=models,
+        choices=choices,
         default=default,
     ).ask() or default
 
