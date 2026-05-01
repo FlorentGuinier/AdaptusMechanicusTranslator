@@ -2,6 +2,8 @@ import os
 import threading
 import webbrowser
 
+import questionary
+
 
 def _pick_model() -> str:
     try:
@@ -15,21 +17,11 @@ def _pick_model() -> str:
 
     default = next((m for m in models if "mistral" in m.lower()), models[0])
 
-    print("\nAvailable models:")
-    for i, name in enumerate(models, 1):
-        marker = " (default)" if name == default else ""
-        print(f"  {i}. {name}{marker}")
-
-    try:
-        choice = input(f"\nSelect model [Enter = {default}]: ").strip()
-        if choice:
-            idx = int(choice) - 1
-            if 0 <= idx < len(models):
-                return models[idx]
-    except (ValueError, KeyboardInterrupt):
-        pass
-
-    return default
+    return questionary.select(
+        "Select model:",
+        choices=models,
+        default=default,
+    ).ask() or default
 
 
 if __name__ == "__main__":
