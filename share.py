@@ -1,4 +1,5 @@
 import re
+import shutil
 import subprocess
 import sys
 import threading
@@ -12,11 +13,15 @@ def _run_flask():
 
 
 def main():
+    cloudflared = shutil.which("cloudflared")
+    if not cloudflared:
+        sys.exit("cloudflared not found. Install it: winget install Cloudflare.cloudflared")
+
     threading.Thread(target=_run_flask, daemon=True).start()
     time.sleep(0.8)
 
     proc = subprocess.Popen(
-        ["cloudflared", "tunnel", "--url", "http://localhost:5000"],
+        [cloudflared, "tunnel", "--url", "http://localhost:5000"],
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         text=True,
