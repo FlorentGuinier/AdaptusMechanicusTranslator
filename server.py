@@ -28,8 +28,7 @@ def index():
 def status():
     try:
         names = [getattr(m, "model", getattr(m, "name", "")) for m in ollama.list().models]
-        ok = any("mistral" in n.lower() for n in names)
-        return {"ok": ok}
+        return {"ok": bool(names)}
     except Exception:
         return {"ok": False}
 

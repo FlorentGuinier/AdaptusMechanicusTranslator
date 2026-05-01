@@ -54,15 +54,21 @@ def test_index_returns_html(client):
 
 # ── GET /status ────────────────────────────────────────────────────────────────
 
-def test_status_ok_when_mistral_present(client):
-    with patch("server.ollama.list", return_value=_make_list_response("mistral:latest")):
+def test_status_true_when_any_model_present(client):
+    with patch("server.ollama.list", return_value=_make_list_response("llama3.1:8b")):
         r = client.get("/status")
     assert r.status_code == 200
     assert r.get_json()["ok"] is True
 
 
-def test_status_false_when_no_mistral(client):
+def test_status_true_when_multiple_models_present(client):
     with patch("server.ollama.list", return_value=_make_list_response("llama3", "phi3")):
+        r = client.get("/status")
+    assert r.get_json()["ok"] is True
+
+
+def test_status_false_when_no_models_loaded(client):
+    with patch("server.ollama.list", return_value=_make_list_response()):
         r = client.get("/status")
     assert r.get_json()["ok"] is False
 
@@ -71,12 +77,6 @@ def test_status_false_when_ollama_unreachable(client):
     with patch("server.ollama.list", side_effect=Exception("connection refused")):
         r = client.get("/status")
     assert r.get_json()["ok"] is False
-
-
-def test_status_partial_name_match(client):
-    with patch("server.ollama.list", return_value=_make_list_response("mistral:7b-instruct-q4_0")):
-        r = client.get("/status")
-    assert r.get_json()["ok"] is True
 
 
 def test_status_returns_ok_key(client):
