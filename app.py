@@ -10,15 +10,10 @@ import questionary
 from questionary import Choice
 
 _MODELS = [
-    ("llama3.2:3b",      "~2 GB",  "fast · lightweight    — 4 GB GPU"),
-    ("gemma3:4b",        "~3 GB",  "efficient · capable   — 4 GB GPU"),
-    ("mistral:7b",       "~4 GB",  "classic · reliable    — 6 GB GPU"),
-    ("llama3.1:8b",      "~5 GB",  "great quality         — 8 GB GPU  ← recommended"),
-    ("mistral-nemo:12b", "~7 GB",  "excellent balance     — 10 GB GPU"),
-    ("phi4:14b",         "~9 GB",  "high quality          — 12 GB GPU"),
-    ("qwen2.5:14b",      "~9 GB",  "multilingual · smart  — 12 GB GPU"),
-    ("gemma3:27b",       "~16 GB", "very high quality     — 20 GB GPU"),
-    ("qwen2.5:32b",      "~19 GB", "top tier              — 24 GB GPU"),
+    ("gemma3:4b",   "~3 GB",  "4 GB GPU"),
+    ("llama3.1:8b", "~5 GB",  "8 GB GPU  ← recommended"),
+    ("phi4:14b",    "~9 GB",  "12 GB GPU"),
+    ("gemma3:27b",  "~16 GB", "20 GB GPU"),
 ]
 _DEFAULT = "llama3.1:8b"
 
